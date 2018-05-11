@@ -1,0 +1,11 @@
+[{
+  "modid": "fiberoptics",
+  "name": "Fiber Optics",
+  "description": "A powerful yet efficient one size fits all pipes mod.",
+  "version": "1.0.0.0",
+  "mcversion": "1.10.2",
+  "logoFile": "assets/examplemod/textures/logo.png",
+  "url": "minecraftforge.net/",
+  "updateJSON": "minecraftforge.net/versions.json",
+  "authorList": ["Jack Sorrell"]
+}]
