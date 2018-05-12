@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "normal": {
+      "model": "fiberoptics:optical_fiber"
+    },
+    "inventory": {
+      "model": "fiberoptics:optical_fiber"
+    }
+  }
+}

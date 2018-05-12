@@ -1,0 +1,21 @@
+{
+  "textures": {
+    "particle": "blocks/anvil_base",
+    "side": "blocks/anvil_base"
+  },
+  "elements": [
+    {
+      "from": [ 4, 4, 4 ],
+      "to": [ 12, 12, 12 ],
+      "shade": false,
+      "faces": {
+        "down": { "uv": [4, 4, 12, 12], "texture": "#side" },
+        "up": { "uv": [4, 4, 12, 12], "texture": "#side" },
+        "north": { "uv": [4, 4, 12, 12], "texture": "#side" },
+        "east": { "uv": [4, 4, 12, 12], "texture": "#side" },
+        "south": { "uv": [4, 4, 12, 12], "texture": "#side" },
+        "west": { "uv": [4, 4, 12, 12], "texture": "#side" }
+      }
+    }
+  ]
+}
