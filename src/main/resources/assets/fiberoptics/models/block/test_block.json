@@ -1,0 +1,20 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "blocks/anvil_base",
+    "testblock": "blocks/anvil_base"
+  },
+  "elements": [
+    {   "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "uv": [ 0, 0, 16, 16 ], "texture": "#testblock", "rotation": 270, "cullface": "down" },
+        "up":    { "uv": [ 0, 0, 16, 16 ], "texture": "#testblock", "rotation": 90, "cullface": "up" },
+        "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#testblock", "cullface": "north" },
+        "south": { "uv": [ 0, 0, 16, 16 ], "texture": "#testblock", "cullface": "south" },
+        "west":  { "uv": [ 0, 0, 16, 16 ], "texture": "#testblock", "cullface": "west" },
+        "east":  { "uv": [ 16, 0, 0, 16 ], "texture": "#testblock", "cullface": "east" }
+      }
+    }
+  ]
+}

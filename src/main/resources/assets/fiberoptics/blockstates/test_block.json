@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "normal": {
+      "model": "fiberoptics:test_block"
+    },
+    "inventory": {
+      "model": "fiberoptics:test_block"
+    }
+  }
+}
