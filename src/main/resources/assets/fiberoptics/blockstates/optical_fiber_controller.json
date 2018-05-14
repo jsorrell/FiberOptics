@@ -1,0 +1,75 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "model": "fiberoptics:optical_fiber"
+  },
+  "variants": {
+    "inventory": [{
+    }],
+    "up": {
+      "true": {
+        "submodel": {
+          "connection_up": {
+            "model": "fiberoptics:optical_fiber_connection",
+            "x": 270
+          }
+        }
+      },
+      "false": {}
+    },
+    "down": {
+      "true": {
+        "submodel": {
+          "connection_down": {
+            "model": "fiberoptics:optical_fiber_connection",
+            "x": 90
+          }
+        }
+      },
+      "false": {}
+    },
+    "north": {
+      "true": {
+        "submodel": {
+          "connection_north": {
+            "model": "fiberoptics:optical_fiber_connection"
+          }
+        }
+      },
+      "false": {}
+    },
+    "east": {
+      "true": {
+        "submodel": {
+          "connection_east": {
+            "model": "fiberoptics:optical_fiber_connection",
+            "y": 90
+          }
+        }
+      },
+      "false": {}
+    },
+    "south": {
+      "true": {
+        "submodel": {
+          "connection_south": {
+            "model": "fiberoptics:optical_fiber_connection",
+            "y": 180
+          }
+        }
+      },
+      "false": {}
+    },
+    "west": {
+      "true": {
+        "submodel": {
+          "connection_west": {
+            "model": "fiberoptics:optical_fiber_connection",
+            "y": 270
+          }
+        }
+      },
+      "false": {}
+    }
+  }
+}

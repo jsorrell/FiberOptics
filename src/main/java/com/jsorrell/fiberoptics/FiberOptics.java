@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics;
 
 import com.jsorrell.fiberoptics.block.ModBlocks;
+import com.jsorrell.fiberoptics.item.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -22,37 +23,46 @@ public class FiberOptics {
   public static CommonProxy proxy;
 
   @Mod.Instance
+  @SuppressWarnings("unused")
   public static FiberOptics instance;
 
   @Mod.EventHandler
+  @SuppressWarnings("unused")
   public void preInit(FMLPreInitializationEvent e) {
     //NetworkRegistry.INSTANCE.registerGuiHandler(this, new ModGuiHandler());
   }
 
   @Mod.EventHandler
+  @SuppressWarnings("unused")
   public void init(FMLInitializationEvent e) {
     //ModidPacketHandler.registerPacketHandlers();
   }
 
   @Mod.EventHandler
+  @SuppressWarnings("unused")
   public void postInit(FMLPostInitializationEvent e) {
   }
 
   @Mod.EventBusSubscriber
   public static class RegistrationHandler {
     @SubscribeEvent
+    @SuppressWarnings("unused")
     public static void registerItems(RegistryEvent.Register<Item> event) {
       ModBlocks.registerItemBlocks(event.getRegistry());
+      ModItems.registerItems(event.getRegistry());
     }
 
     @SubscribeEvent
+    @SuppressWarnings("unused")
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
       ModBlocks.registerBlocks(event.getRegistry());
     }
 
     @SubscribeEvent
+    @SuppressWarnings("unused")
     public static void registerModels(ModelRegistryEvent event) {
       ModBlocks.registerItemBlockModels();
+      ModItems.registerItemModels();
     }
   }
 }

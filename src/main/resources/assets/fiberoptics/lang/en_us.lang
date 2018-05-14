@@ -1,0 +1,10 @@
+# Blocks
+tile.optical_fiber.name=Optical Fiber
+####TODO change to Optical Fiber when done debugging####
+tile.optical_fiber_controller.name=Optical Fiber Controller
+
+# Items
+item.debug_tool.name=Debug Tool
+
+# Creative Tab
+itemGroup.fiberoptics=Fiber Optics
