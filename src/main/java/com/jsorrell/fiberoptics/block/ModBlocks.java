@@ -11,25 +11,21 @@ public class ModBlocks {
   public static final Item itemBlockTestBlock = testBlock.createItemBlock();
   public static final BlockOpticalFiber opticalFiber = new BlockOpticalFiber();
   public static final Item itemBlockOpticalFiber = opticalFiber.createItemBlock();
-  public static final BlockOpticalFiberController opticalFiberController = new BlockOpticalFiberController();
 
   public static void registerBlocks(IForgeRegistry<Block> registry) {
     registry.registerAll(
             testBlock,
-            opticalFiber,
-            opticalFiberController
+            opticalFiber
     );
 
-    GameRegistry.registerTileEntity(opticalFiber.getTileEntityClass(), opticalFiber.getRegistryName().toString());
-    GameRegistry.registerTileEntity(opticalFiberController.getTileEntityClass(), opticalFiberController.getRegistryName().toString());
+    GameRegistry.registerTileEntity(TileOpticalFiber.class, "optical_fiber");
+    GameRegistry.registerTileEntity(TileOpticalFiberController.class, "optical_fiber_controller");
   }
 
   public static void registerItemBlocks(IForgeRegistry<Item> registry) {
     registry.registerAll(
             itemBlockTestBlock,
-            itemBlockOpticalFiber,
-            //FIXME currently being used to hack waila
-            opticalFiberController.createItemBlock()
+            itemBlockOpticalFiber
     );
   }
 

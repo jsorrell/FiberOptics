@@ -9,12 +9,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public abstract class BlockTileEntityBase<TE extends TileEntity> extends BlockBase implements ITileEntityProvider {
+public abstract class BlockTileEntityBase<TE extends TileEntity> extends BlockBase {
   public BlockTileEntityBase(Material material, String name) {
     super(material, name);
   }
-
-  public abstract Class<TE> getTileEntityClass();
 
   public TE getTileEntity(IBlockAccess world, BlockPos pos) {
     return (TE)world.getTileEntity(pos);
@@ -24,8 +22,4 @@ public abstract class BlockTileEntityBase<TE extends TileEntity> extends BlockBa
   public boolean hasTileEntity(IBlockState state) {
     return true;
   }
-
-  @Nullable
-  @Override
-  public abstract TileEntity createNewTileEntity(World worldIn, int meta);
 }
