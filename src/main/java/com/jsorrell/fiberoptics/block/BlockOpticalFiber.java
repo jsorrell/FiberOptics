@@ -295,4 +295,5 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     }
     super.breakBlock(worldIn, pos, state);
   }
+
 }

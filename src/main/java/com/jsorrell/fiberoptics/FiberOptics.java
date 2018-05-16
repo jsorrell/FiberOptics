@@ -2,6 +2,7 @@ package com.jsorrell.fiberoptics;
 
 import com.jsorrell.fiberoptics.block.ModBlocks;
 import com.jsorrell.fiberoptics.item.ModItems;
+import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -39,7 +40,7 @@ public class FiberOptics {
   @Mod.EventHandler
   @SuppressWarnings("unused")
   public void init(FMLInitializationEvent e) {
-    //ModidPacketHandler.registerPacketHandlers();
+    FiberOpticsPacketHandler.registerPacketHandlers();
   }
 
   @Mod.EventHandler

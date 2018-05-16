@@ -5,6 +5,8 @@ tile.optical_fiber_controller.name=Optical Fiber Controller
 
 # Items
 item.debug_tool.name=Debug Tool
+item.terminator.name=Terminator
+
 
 # Creative Tab
 itemGroup.fiberoptics=Fiber Optics

@@ -1,5 +1,6 @@
 package com.jsorrell.fiberoptics.block;
 
+import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 
@@ -58,6 +59,11 @@ public class TileOpticalFiberController extends TileOpticalFiberBase {
         }
       }
     }
+  }
+
+  public boolean addConnection(OpticalFiberConnection connection) {
+    // TODO implement me
+    return true;
   }
 
   @Override

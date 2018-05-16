@@ -1,15 +1,18 @@
 package com.jsorrell.fiberoptics.connection;
 
-import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
-import net.minecraft.tileentity.TileEntity;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
 
-class OpticalFiberItemOutput extends OpticalFiberConnection implements OpticalFiberOutput {
-  public OpticalFiberItemOutput(BlockPos pos, TileOpticalFiberController controller, TileEntity connectedTile, EnumFacing connectedSide) {
-    super(pos, controller, connectedTile, connectedSide);
+public class OpticalFiberItemOutput extends OpticalFiberConnection implements OpticalFiberOutput {
+  public OpticalFiberItemOutput(BlockPos pos, EnumFacing connectedSide) {
+    super(pos, connectedSide);
+  }
+
+  public OpticalFiberItemOutput(ByteBuf buf) {
+    super(buf);
   }
 
   @Override
