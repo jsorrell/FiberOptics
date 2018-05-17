@@ -17,10 +17,10 @@ public abstract class TileOpticalFiberBase extends TileEntity {
   }
 
   public class PossibleConnection {
-    EnumFacing direction;
+    EnumFacing facing;
     OpticalFiberConnection.ConnectionType connectionType;
-    PossibleConnection(EnumFacing direction, OpticalFiberConnection.ConnectionType connectionType) {
-      this.direction = direction;
+    PossibleConnection(EnumFacing facing, OpticalFiberConnection.ConnectionType connectionType) {
+      this.facing = facing;
       this.connectionType = connectionType;
     }
 
@@ -28,13 +28,13 @@ public abstract class TileOpticalFiberBase extends TileEntity {
       return connectionType;
     }
 
-    public EnumFacing getDirection() {
-      return direction;
+    public EnumFacing getFacing() {
+      return facing;
     }
 
     @Override
     public String toString() {
-      return direction.toString() + " " + connectionType.toString();
+      return facing.toString() + " " + connectionType.toString();
     }
   }
 
