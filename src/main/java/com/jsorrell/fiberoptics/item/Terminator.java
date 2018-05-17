@@ -1,8 +1,6 @@
 package com.jsorrell.fiberoptics.item;
 
-import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
 import com.jsorrell.fiberoptics.client.gui.TerminatorGui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -32,14 +30,7 @@ public class Terminator extends ItemBase {
       return EnumActionResult.PASS;
     }
     TileOpticalFiberBase tile = (TileOpticalFiberBase) testTile;
-    TileEntity testControllerTile = worldIn.getTileEntity(tile.getControllerPos());
-    if (!(testControllerTile instanceof TileOpticalFiberController)) {
-      FiberOptics.LOGGER.log(Level.SEVERE, "Stored controller tile doesn't exist.");
-      return EnumActionResult.FAIL;
-    }
-    TileOpticalFiberController controller = (TileOpticalFiberController) worldIn.getTileEntity(tile.getControllerPos());
-
-    Minecraft.getMinecraft().displayGuiScreen(new TerminatorGui(pos));
+    Minecraft.getMinecraft().displayGuiScreen(new TerminatorGui(pos, tile.getPossibleConnections()));
 
     return EnumActionResult.SUCCESS;
   }

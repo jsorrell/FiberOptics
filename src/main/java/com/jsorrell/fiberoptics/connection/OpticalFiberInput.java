@@ -1,8 +1,20 @@
 package com.jsorrell.fiberoptics.connection;
 
+import io.netty.buffer.ByteBuf;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 
-import javax.annotation.Nonnull;
+public class OpticalFiberInput extends OpticalFiberConnection {
+  public OpticalFiberInput(BlockPos pos, EnumFacing connectedSide, ConnectionType connectionType) {
+    super(pos, connectedSide, connectionType);
+  }
 
-interface OpticalFiberInput {
-  int canAccept(@Nonnull Object o);
+  public OpticalFiberInput(ByteBuf buf) {
+    super(buf);
+  }
+
+  @Override
+  public ConnectionDirection getConnectionDirection() {
+    return ConnectionDirection.INPUT;
+  }
 }

@@ -31,6 +31,11 @@ public abstract class TileOpticalFiberBase extends TileEntity {
     public EnumFacing getDirection() {
       return direction;
     }
+
+    @Override
+    public String toString() {
+      return direction.toString() + " " + connectionType.toString();
+    }
   }
 
   public List<PossibleConnection> getPossibleConnections() {
