@@ -6,7 +6,7 @@ import com.jsorrell.fiberoptics.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.connection.OpticalFiberOutput;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.OpticalFiberConnectionCreationRequest;
-import com.jsorrell.fiberoptics.transfer_types.TransferType;
+import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.EnumFacing;
@@ -77,7 +77,8 @@ public class TerminatorGui extends GuiScreen {
     public void initGui() {
       buttonList.clear();
       for (int i = 0; i < this.possibleConnections.size(); i++) {
-        this.possibleConnectionsButtons[i] = new GuiButton(i, width/2 - 200/2, i*20, 200, 20, this.possibleConnections.get(i).toString());
+        TileOpticalFiberBase.PossibleConnection possibleConnection = this.possibleConnections.get(i);
+        this.possibleConnectionsButtons[i] = new GuiButton(i, width/2 - 200/2, i*20, 200, 20, possibleConnection.getFacing().toString() + " " + possibleConnection.getTransferType().getName());
         buttonList.add(possibleConnectionsButtons[i]);
       }
     }

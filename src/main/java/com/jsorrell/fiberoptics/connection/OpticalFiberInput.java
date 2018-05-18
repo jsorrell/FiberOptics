@@ -1,6 +1,6 @@
 package com.jsorrell.fiberoptics.connection;
 
-import com.jsorrell.fiberoptics.transfer_types.TransferType;
+import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;

@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.transfer_types;
+package com.jsorrell.fiberoptics.transfer_type;
 
 public class ModTransferTypes {
   public static final TransferTypeItems ITEMS = new TransferTypeItems();

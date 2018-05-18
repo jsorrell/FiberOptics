@@ -2,8 +2,8 @@ package com.jsorrell.fiberoptics.connection;
 
 import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
-import com.jsorrell.fiberoptics.transfer_types.ModTransferTypes;
-import com.jsorrell.fiberoptics.transfer_types.TransferType;
+import com.jsorrell.fiberoptics.transfer_type.ModTransferTypes;
+import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;

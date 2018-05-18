@@ -7,6 +7,10 @@ tile.optical_fiber_controller.name=Optical Fiber Controller
 item.debug_tool.name=Debug Tool
 item.terminator.name=Terminator
 
-
 # Creative Tab
 itemGroup.fiberoptics=Fiber Optics
+
+# Transfer Types
+transfer_type.items.name=Items
+transfer_type.forge_fluids.name=Fluids
+transfer_type.forge_energy.name=Forge Energy

@@ -1,23 +1,13 @@
-package com.jsorrell.fiberoptics.transfer_types;
+package com.jsorrell.fiberoptics.transfer_type;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import java.lang.reflect.Type;
-
 public class TransferTypeItems extends TransferType<IItemHandler> {
-  @Override
-  public Type getTransferObjectType() {
-    return ItemStack.class;
-  }
-
-  @Override
-  public String toString() {
-    return "items";
-  }
-
   @Override
   public Capability<IItemHandler> getCapability() {
     return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
@@ -61,5 +51,10 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
       }
     }
     return false;
+  }
+
+  @Override
+  public String getUnlocalizedName() {
+    return "items";
   }
 }
