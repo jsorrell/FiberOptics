@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 import java.util.logging.Logger;
 
@@ -34,7 +35,7 @@ public class FiberOptics {
   @Mod.EventHandler
   @SuppressWarnings("unused")
   public void preInit(FMLPreInitializationEvent e) {
-    //NetworkRegistry.INSTANCE.registerGuiHandler(this, new ModGuiHandler());
+    NetworkRegistry.INSTANCE.registerGuiHandler(this, new FiberOpticsGuiHandler());
   }
 
   @Mod.EventHandler

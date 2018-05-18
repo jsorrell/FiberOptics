@@ -15,12 +15,12 @@ import java.util.logging.Level;
 
 import static com.google.common.base.Ascii.NUL;
 
-public class OpticalFiberConnectionCreationMessage implements IMessage {
-  public OpticalFiberConnectionCreationMessage() {}
+public class OpticalFiberConnectionCreationRequest implements IMessage {
+  public OpticalFiberConnectionCreationRequest() {}
 
   OpticalFiberConnection connection;
 
-  public OpticalFiberConnectionCreationMessage(OpticalFiberConnection connection) {
+  public OpticalFiberConnectionCreationRequest(OpticalFiberConnection connection) {
     this.connection = connection;
   }
 
@@ -58,9 +58,9 @@ public class OpticalFiberConnectionCreationMessage implements IMessage {
     }
   }
 
-  public static class Handler implements IMessageHandler<OpticalFiberConnectionCreationMessage, IMessage> {
+  public static class Handler implements IMessageHandler<OpticalFiberConnectionCreationRequest, IMessage> {
     @Override
-    public IMessage onMessage(OpticalFiberConnectionCreationMessage message, MessageContext ctx) {
+    public IMessage onMessage(OpticalFiberConnectionCreationRequest message, MessageContext ctx) {
       // If the message was garbled
       if (message.connection == null) {
         return null;

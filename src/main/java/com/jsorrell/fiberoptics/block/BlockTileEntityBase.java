@@ -1,13 +1,10 @@
 package com.jsorrell.fiberoptics.block;
 
-import jline.internal.Nullable;
-import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
 
 public abstract class BlockTileEntityBase<TE extends TileEntity> extends BlockBase {
   public BlockTileEntityBase(Material material, String name) {

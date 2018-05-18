@@ -1,15 +1,37 @@
 package com.jsorrell.fiberoptics.block;
 
 import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.connection.OpticalFiberInput;
+import com.jsorrell.fiberoptics.connection.OpticalFiberOutput;
+import com.jsorrell.fiberoptics.transfer_types.ModTransferTypes;
+import com.jsorrell.fiberoptics.transfer_types.TransferType;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class TileOpticalFiberController extends TileOpticalFiberBase {
+public class TileOpticalFiberController extends TileOpticalFiberBase implements ITickable {
+  private final List<OpticalFiberInput> inputConnections = new ArrayList<>();
+  private final List[] outputConnections = new List[ModTransferTypes.VALUES.length];
+  private int currentTick = 0;
+
+  private List<OpticalFiberInput> getInputConnections() {
+    return this.inputConnections;
+  }
+
+  @SuppressWarnings("unchecked")
+  private List<OpticalFiberOutput> getOutputConnections(TransferType type) {
+    // Lazy instantiation to save memory when most will be null
+    int index = ModTransferTypes.getIndex(type);
+    List<OpticalFiberOutput> ret = outputConnections[index];
+    if (ret == null) {
+      ret = new ArrayList<>();
+      outputConnections[index] = ret;
+    }
+    return ret;
+  }
 
   public BlockPos getControllerPos() {
     return this.pos;
@@ -18,10 +40,6 @@ public class TileOpticalFiberController extends TileOpticalFiberBase {
   @Override
   public boolean isController() {
     return true;
-  }
-
-  public void addFiber(TileOpticalFiber newFiber) {
-
   }
 
   // Should be adjacent networks
@@ -62,7 +80,20 @@ public class TileOpticalFiberController extends TileOpticalFiberBase {
   }
 
   public boolean addConnection(OpticalFiberConnection connection) {
-    // TODO implement me
+    if (connection instanceof OpticalFiberInput) {
+      List<OpticalFiberInput> inputs = getInputConnections();
+      inputs.add((OpticalFiberInput) connection);
+    } else if (connection instanceof OpticalFiberOutput) {
+      List<OpticalFiberOutput> outputs = getOutputConnections(connection.getTransferType());
+      outputs.add((OpticalFiberOutput) connection);
+    }
+
+    System.out.println("Add Connection");
+    System.out.println(connection.getClass());
+    System.out.println(connection.getPos());
+    System.out.println(connection.getConnectedSide());
+    System.out.println(connection.getTransferDirection());
+    System.out.println(connection.getTransferType());
     return true;
   }
 
@@ -74,5 +105,21 @@ public class TileOpticalFiberController extends TileOpticalFiberBase {
   @Override
   public void readFromNBT(NBTTagCompound compound) {
     super.readFromNBT(compound);
+  }
+
+  @Override
+  public void update() {
+    //TODO parallelize (maybe. possibly slower on small networks)
+    for (OpticalFiberInput input : getInputConnections()) {
+      if (input.isOffering(world)) {
+        List<OpticalFiberOutput> outputs = getOutputConnections(input.getTransferType());
+        for (OpticalFiberOutput output : outputs) {
+          if (input.doTransfer(world, output)) {
+            // only do one transfer per tick for now
+            return;
+          }
+        }
+      }
+    }
   }
 }

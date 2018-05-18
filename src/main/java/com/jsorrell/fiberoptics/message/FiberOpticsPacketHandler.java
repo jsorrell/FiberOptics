@@ -10,6 +10,6 @@ public class FiberOpticsPacketHandler {
   private static int discriminator = 0;
 
   public static void registerPacketHandlers() {
-    INSTANCE.registerMessage(OpticalFiberConnectionCreationMessage.Handler.class, OpticalFiberConnectionCreationMessage.class, discriminator++, Side.SERVER);
+    INSTANCE.registerMessage(OpticalFiberConnectionCreationRequest.Handler.class, OpticalFiberConnectionCreationRequest.class, discriminator++, Side.SERVER);
   }
 }

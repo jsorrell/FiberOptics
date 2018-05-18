@@ -1,12 +1,17 @@
 package com.jsorrell.fiberoptics.block;
 
-import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.FiberOptics;
+import com.jsorrell.fiberoptics.transfer_types.ModTransferTypes;
+import com.jsorrell.fiberoptics.transfer_types.TransferType;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 
 public abstract class TileOpticalFiberBase extends TileEntity {
   public abstract BlockPos getControllerPos();
@@ -18,14 +23,14 @@ public abstract class TileOpticalFiberBase extends TileEntity {
 
   public class PossibleConnection {
     EnumFacing facing;
-    OpticalFiberConnection.ConnectionType connectionType;
-    PossibleConnection(EnumFacing facing, OpticalFiberConnection.ConnectionType connectionType) {
+    TransferType transferType;
+    PossibleConnection(EnumFacing facing, TransferType transferType) {
       this.facing = facing;
-      this.connectionType = connectionType;
+      this.transferType = transferType;
     }
 
-    public OpticalFiberConnection.ConnectionType getConnectionType() {
-      return connectionType;
+    public TransferType getTransferType() {
+      return transferType;
     }
 
     public EnumFacing getFacing() {
@@ -34,24 +39,39 @@ public abstract class TileOpticalFiberBase extends TileEntity {
 
     @Override
     public String toString() {
-      return facing.toString() + " " + connectionType.toString();
+      return facing.toString() + " " + transferType.toString();
     }
   }
 
   public List<PossibleConnection> getPossibleConnections() {
-    List<PossibleConnection> res = new ArrayList<>(6 * OpticalFiberConnection.ConnectionType.values().length);
+    List<PossibleConnection> res = new ArrayList<>(6 * ModTransferTypes.VALUES.length);
     for (EnumFacing direction : EnumFacing.VALUES) {
       TileEntity testTile = this.world.getTileEntity(this.pos.offset(direction));
       if (testTile == null) {
         continue;
       }
-      for (OpticalFiberConnection.ConnectionType connectionType : OpticalFiberConnection.ConnectionType.values())
-      if (testTile.hasCapability(connectionType.getCapability(), direction.getOpposite())) {
-        PossibleConnection possibleConnection = new PossibleConnection(direction, connectionType);
+      for (TransferType transferType : ModTransferTypes.VALUES)
+      if (testTile.hasCapability(transferType.getCapability(), direction.getOpposite())) {
+        PossibleConnection possibleConnection = new PossibleConnection(direction, transferType);
         res.add(possibleConnection);
       }
     }
 
     return res;
+  }
+
+  // Only call when sure object should be TileOpticalFiberBase or subclass
+  public static TileOpticalFiberBase getTileEntity(IBlockAccess world, BlockPos pos) {
+    TileEntity testTile = world.getTileEntity(pos);
+    if (testTile == null) {
+      FiberOptics.LOGGER.log(Level.WARNING, "Tile Entity does not exist: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+      return null;
+    }
+    if (!(testTile instanceof TileOpticalFiberBase)) {
+      FiberOptics.LOGGER.log(Level.WARNING, "Tile is not instance of TileOpticalFiberBase: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+      return null;
+    }
+
+    return (TileOpticalFiberBase) testTile;
   }
 }

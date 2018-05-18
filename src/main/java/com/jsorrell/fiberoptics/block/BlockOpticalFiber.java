@@ -5,14 +5,19 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
+import org.lwjgl.Sys;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -25,6 +30,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   protected static final PropertyBool southConnected = PropertyBool.create("south");
   protected static final PropertyBool eastConnected = PropertyBool.create("east");
   protected static final PropertyBool westConnected = PropertyBool.create("west");
+  protected static final PropertyBool isController = PropertyBool.create("controller");
 
 
   public BlockOpticalFiber() {
@@ -40,18 +46,23 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
             .withProperty(northConnected, false)
             .withProperty(southConnected, false)
             .withProperty(eastConnected, false)
-            .withProperty(westConnected, false);
+            .withProperty(westConnected, false)
+            .withProperty(isController, false);
     setDefaultState(defaultState);
   }
 
   @Override
   public IBlockState getStateFromMeta(int meta) {
-    return this.getDefaultState();
+      return this.getDefaultState().withProperty(isController, (meta & 0x1) == 0x1);
   }
 
   @Override
   public int getMetaFromState(IBlockState state) {
-    return 0;
+    int meta = 0;
+    if (state.getValue(isController)) {
+      meta |= 0x1;
+    }
+    return meta;
   }
 
   @Override
@@ -74,7 +85,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
 
   @Override
   protected BlockStateContainer createBlockState() {
-    return new BlockStateContainer(this, upConnected, downConnected, northConnected, southConnected, eastConnected, westConnected);
+    return new BlockStateContainer(this, upConnected, downConnected, northConnected, southConnected, eastConnected, westConnected, isController);
   }
 
   @Override
@@ -195,13 +206,26 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   }
 
   @Override
-  public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
-    if (getConnectedFibers(worldIn, pos).isEmpty()) {
-      // If not connected to a controller, ensure a controller tile entity is created
-      worldIn.setTileEntity(pos, new TileOpticalFiberController());
+  public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
+    return super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer, hand).withProperty(isController, getConnectedFibers(world, pos).isEmpty());
+  }
+
+  @Nullable
+  @Override
+  public TileEntity createTileEntity(World world, IBlockState state) {
+    if (state.getValue(isController)) {
+      return new TileOpticalFiberController();
     } else {
-      TileOpticalFiber tile = new TileOpticalFiber();
-      worldIn.setTileEntity(pos, tile);
+      return new TileOpticalFiber();
+    }
+  }
+
+  @Override
+  public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+    if (state.getValue(isController)) {
+      return;
+    } else {
+      TileOpticalFiber tile = (TileOpticalFiber) worldIn.getTileEntity(pos);
 
       // Check state of network
       Set<BlockPos> connectedControllers = new HashSet<>();
@@ -242,7 +266,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
         }
       }
     }
-    super.onBlockAdded(worldIn, pos, state);
+    super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
   }
 
   // TODO transfer data from any old controllers
@@ -295,5 +319,4 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     }
     super.breakBlock(worldIn, pos, state);
   }
-
 }

@@ -5,29 +5,27 @@ import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.connection.OpticalFiberOutput;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
-import com.jsorrell.fiberoptics.message.OpticalFiberConnectionCreationMessage;
+import com.jsorrell.fiberoptics.message.OpticalFiberConnectionCreationRequest;
+import com.jsorrell.fiberoptics.transfer_types.TransferType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TerminatorGui extends GuiScreen {
-  private BlockPos pos;
-  private List<TileOpticalFiberBase.PossibleConnection> possibleConnections; //TODO Query server for this when main page opened
+  private TileOpticalFiberBase tile;
+  private List<TileOpticalFiberBase.PossibleConnection> possibleConnections;
   private IGuiPage currentPage;
 
   // Build Connection
-  private OpticalFiberConnection.ConnectionType connectionType;
+  private TransferType transferType;
   private EnumFacing connectionFacing;
 
-  public TerminatorGui(BlockPos pos, List<TileOpticalFiberBase.PossibleConnection> possibleConnections) {
-    this.pos = pos;
-    this.possibleConnections = possibleConnections;
-    currentPage = new MainPage(new ArrayList<>(possibleConnections));
+  public TerminatorGui(TileOpticalFiberBase tile) {
+    this.tile = tile;
+    currentPage = new MainPage();
   }
 
   @Override
@@ -57,11 +55,21 @@ public class TerminatorGui extends GuiScreen {
     void actionPerformed(GuiButton button) throws IOException;
   }
 
+  private List<TileOpticalFiberBase.PossibleConnection> getPossibleConnections() {
+    if (possibleConnections == null) {
+      possibleConnections = tile.getPossibleConnections();
+    }
+    return possibleConnections;
+  }
+
+  /*
+   * Main Page
+   */
   private class MainPage implements IGuiPage {
     private List<TileOpticalFiberBase.PossibleConnection> possibleConnections;
     private GuiButton[] possibleConnectionsButtons;
-    public MainPage(List<TileOpticalFiberBase.PossibleConnection> possibleConnections) {
-      this.possibleConnections = possibleConnections;
+    public MainPage() {
+      this.possibleConnections = getPossibleConnections();
       this.possibleConnectionsButtons = new GuiButton[possibleConnections.size()];
     }
 
@@ -69,7 +77,7 @@ public class TerminatorGui extends GuiScreen {
     public void initGui() {
       buttonList.clear();
       for (int i = 0; i < this.possibleConnections.size(); i++) {
-        this.possibleConnectionsButtons[i] = new GuiButton(i, width/2 - 200/2, i*20, 200, 20, possibleConnections.get(i).toString());
+        this.possibleConnectionsButtons[i] = new GuiButton(i, width/2 - 200/2, i*20, 200, 20, this.possibleConnections.get(i).toString());
         buttonList.add(possibleConnectionsButtons[i]);
       }
     }
@@ -78,12 +86,15 @@ public class TerminatorGui extends GuiScreen {
     public void actionPerformed(GuiButton button) throws IOException {
       TileOpticalFiberBase.PossibleConnection possibleConnection = this.possibleConnections.get(button.id);
       connectionFacing = possibleConnection.getFacing();
-      connectionType = possibleConnection.getConnectionType();
+      transferType = possibleConnection.getTransferType();
       currentPage = new DirectionPage();
       currentPage.initGui();
     }
   }
 
+  /*
+   * Direction Page
+   */
   public class DirectionPage implements IGuiPage {
     private GuiButton inputButton;
     private GuiButton outputButton;
@@ -101,12 +112,12 @@ public class TerminatorGui extends GuiScreen {
     public void actionPerformed(GuiButton button) throws IOException {
       OpticalFiberConnection connection;
       if (button.id == INPUT_BUTTON) {
-        connection = new OpticalFiberInput(pos, connectionFacing, connectionType);
+        connection = new OpticalFiberInput(tile.getPos(), connectionFacing, transferType);
       } else {
-        connection = new OpticalFiberOutput(pos, connectionFacing, connectionType);
+        connection = new OpticalFiberOutput(tile.getPos(), connectionFacing, transferType);
       }
 
-      FiberOpticsPacketHandler.INSTANCE.sendToServer(new OpticalFiberConnectionCreationMessage(connection));
+      FiberOpticsPacketHandler.INSTANCE.sendToServer(new OpticalFiberConnectionCreationRequest(connection));
       // close screen
       mc.displayGuiScreen(null);
     }

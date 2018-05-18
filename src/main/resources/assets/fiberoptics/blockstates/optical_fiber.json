@@ -70,6 +70,12 @@
         }
       },
       "false": {}
+    },
+    "controller": {
+      "true": {
+        "__comment": "Need this block so that controller blockstate doesn't break things"
+      },
+      "false": {}
     }
   }
 }
