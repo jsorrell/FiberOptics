@@ -25,7 +25,12 @@ public class TransferTypeFluids extends TransferType<IFluidHandler> {
   }
 
   @Override
-  public boolean isOffering(IFluidHandler capabilityHandler) {
+  public boolean isOffering(IFluidHandler input) {
+    return false;
+  }
+
+  @Override
+  public boolean doTransfer(IFluidHandler input, IFluidHandler output) {
     return false;
   }
 }

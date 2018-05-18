@@ -23,7 +23,12 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   }
 
   @Override
-  public boolean isOffering(IEnergyStorage capabilityHandler) {
+  public boolean isOffering(IEnergyStorage input) {
+    return false;
+  }
+
+  @Override
+  public boolean doTransfer(IEnergyStorage input, IEnergyStorage output) {
     return false;
   }
 }

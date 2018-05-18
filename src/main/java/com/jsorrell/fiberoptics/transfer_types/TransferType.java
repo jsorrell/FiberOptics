@@ -10,5 +10,7 @@ public abstract class TransferType<T> {
 
   public abstract Capability<?> getCapability();
 
-  public abstract boolean isOffering(T capabilityHandler);
+  public abstract boolean isOffering(T input);
+
+  public abstract boolean doTransfer(T input, T output);
 }

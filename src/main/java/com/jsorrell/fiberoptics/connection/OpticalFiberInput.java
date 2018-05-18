@@ -2,7 +2,6 @@ package com.jsorrell.fiberoptics.connection;
 
 import com.jsorrell.fiberoptics.transfer_types.TransferType;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -23,15 +22,22 @@ public class OpticalFiberInput extends OpticalFiberConnection {
     return TransferDirection.INPUT;
   }
 
-  @SuppressWarnings("unchecked")
+
+  /**
+   * Checks if the input has things to transfer.
+   * @param worldIn
+   */
   public boolean isOffering(IBlockAccess worldIn) {
-    TileEntity connectedTile = worldIn.getTileEntity(getPos().offset(getConnectedSide()));
-    Object capabilityHandler = connectedTile.getCapability(this.getTransferType().getCapability(), this.getConnectedSide().getOpposite());
-    return this.getTransferType().isOffering(capabilityHandler);
+    return this.getTransferType().isOffering(getCapabilityHandler(worldIn));
   }
 
+  /**
+   * Attempts to transfer to the output.
+   * @param worldIn World
+   * @param output Where to transfer to
+   * @return Transfer occurred
+   */
   public boolean doTransfer(World worldIn, OpticalFiberOutput output) {
-    //TODO implement
-    return false;
+    return this.getTransferType().doTransfer(getCapabilityHandler(worldIn), output.getCapabilityHandler(worldIn));
   }
 }

@@ -49,6 +49,12 @@ public abstract class OpticalFiberConnection {
     return worldIn.getTileEntity(connectedTilePos);
   }
 
+  @SuppressWarnings("unchecked")
+  protected Object getCapabilityHandler(IBlockAccess worldIn) {
+    TileEntity connectedTile = worldIn.getTileEntity(getPos().offset(getConnectedSide()));
+    return connectedTile.getCapability(this.getTransferType().getCapability(), this.getConnectedSide().getOpposite());
+  }
+
   public EnumFacing getConnectedSide() {
     return connectedSide;
   }
