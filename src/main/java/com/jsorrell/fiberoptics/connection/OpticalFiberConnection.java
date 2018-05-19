@@ -1,14 +1,15 @@
 package com.jsorrell.fiberoptics.connection;
 
-import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
 import com.jsorrell.fiberoptics.transfer_type.ModTransferTypes;
 import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+
+import javax.annotation.Nonnull;
 
 public abstract class OpticalFiberConnection {
   private final BlockPos pos;
@@ -30,6 +31,15 @@ public abstract class OpticalFiberConnection {
     this.transferType = ModTransferTypes.fromIndex(buf.readInt());
   }
 
+  public OpticalFiberConnection(NBTTagCompound compound) {
+    int posX = compound.getInteger("x");
+    int posY = compound.getInteger("y");
+    int posZ = compound.getInteger("z");
+    this.pos = new BlockPos(posX, posY, posZ);
+    this.connectedSide = EnumFacing.getFront(compound.getInteger("connectedSide"));
+    this.transferType = ModTransferTypes.fromUnlocalizedName(compound.getString("transferType"));
+  }
+
   public enum TransferDirection {
     INPUT,
     OUTPUT
@@ -37,11 +47,6 @@ public abstract class OpticalFiberConnection {
 
   public BlockPos getPos() {
     return pos;
-  }
-
-  public TileOpticalFiberController getController(IBlockAccess worldIn) {
-    TileOpticalFiberBase thisTile = (TileOpticalFiberBase) worldIn.getTileEntity(this.pos);
-    return (TileOpticalFiberController)worldIn.getTileEntity(thisTile.getControllerPos());
   }
 
   public TileEntity getConnectedTile(IBlockAccess worldIn) {
@@ -59,6 +64,7 @@ public abstract class OpticalFiberConnection {
     return connectedSide;
   }
 
+  @Nonnull
   public TransferType getTransferType() {
     return this.transferType;
   }
@@ -70,5 +76,14 @@ public abstract class OpticalFiberConnection {
     buf.writeInt(pos.getZ());
     buf.writeInt(connectedSide.getIndex());
     buf.writeInt(ModTransferTypes.getIndex(transferType));
+  }
+
+  public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    compound.setInteger("x", this.pos.getX());
+    compound.setInteger("y", this.pos.getY());
+    compound.setInteger("z", this.pos.getZ());
+    compound.setInteger("connectedSide", this.connectedSide.getIndex());
+    compound.setString("transferType", this.transferType.getUnlocalizedName());
+    return compound;
   }
 }

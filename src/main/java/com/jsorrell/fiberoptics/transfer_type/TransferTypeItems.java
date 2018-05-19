@@ -1,11 +1,11 @@
 package com.jsorrell.fiberoptics.transfer_type;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+
+import javax.annotation.Nonnull;
 
 public class TransferTypeItems extends TransferType<IItemHandler> {
   @Override
@@ -14,7 +14,7 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
   }
 
   @Override
-  public boolean isOffering(IItemHandler input) {
+  public boolean isOffering(@Nonnull IItemHandler input) {
     for (int i = 0; i < input.getSlots(); i++) {
       if (!input.getStackInSlot(i).isEmpty())
         return true;
@@ -22,31 +22,18 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
     return false;
   }
 
-  /**
-   *
-   * @param output
-   * @param stack
-   * @return The number transferred
-   */
-  private int doStackTransfer(IItemHandler output, ItemStack stack) {
-    for (int i = 0; i < output.getSlots(); i++) {
-      ItemStack remainingStack;
-      if (!(remainingStack = output.insertItem(i, stack, false)).equals(stack)) {
-        return stack.getCount() - remainingStack.getCount();
-      }
-    }
-    return 0;
-  }
-
   @Override
-  public boolean doTransfer(IItemHandler input, IItemHandler output) {
+  public boolean doTransfer(@Nonnull IItemHandler input, @Nonnull IItemHandler output) {
     for (int i = 0; i < input.getSlots(); i++) {
       ItemStack inputStack = input.extractItem(i, input.getSlotLimit(i), true);
       if (!inputStack.isEmpty()) {
-        int numTransferred = doStackTransfer(output, inputStack);
-        if (numTransferred > 0) {
-          input.extractItem(i, numTransferred, false);
-          return true;
+        for (int j = 0; j < output.getSlots(); j++) {
+          ItemStack remaining = output.insertItem(j, inputStack, false);
+          int numTransferred = inputStack.getCount() - remaining.getCount();
+          if (numTransferred > 0) {
+            input.extractItem(i, numTransferred, false);
+            return true;
+          }
         }
       }
     }

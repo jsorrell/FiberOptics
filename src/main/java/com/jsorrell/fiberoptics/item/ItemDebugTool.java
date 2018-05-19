@@ -53,7 +53,7 @@ public class ItemDebugTool extends ItemBase {
       }
 
       if (player.isSneaking()) {
-        player.sendStatusMessage(new TextComponentString("Network: " + ModBlocks.opticalFiber.getNetworkedFibers(worldIn, pos)), false);
+        player.sendStatusMessage(new TextComponentString("Network: " + ModBlocks.opticalFiber.getNetworkedFibers(worldIn, pos, null)), false);
       } else {
         player.sendStatusMessage(new TextComponentString("Controller Position: " + controller.getPos()), false);
       }

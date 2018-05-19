@@ -6,6 +6,8 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 
+import javax.annotation.Nonnull;
+
 public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   @Override
   public Capability<IEnergyStorage> getCapability() {
@@ -31,12 +33,12 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   }
 
   @Override
-  public boolean isOffering(IEnergyStorage input) {
+  public boolean isOffering(@Nonnull IEnergyStorage input) {
     return input.extractEnergy(1, true) > 0;
   }
 
   @Override
-  public boolean doTransfer(IEnergyStorage input, IEnergyStorage output) {
+  public boolean doTransfer(@Nonnull IEnergyStorage input, IEnergyStorage output) {
     int available = input.extractEnergy(1000, true);
     int transferred = output.receiveEnergy(available, false);
     if (transferred > 0) {

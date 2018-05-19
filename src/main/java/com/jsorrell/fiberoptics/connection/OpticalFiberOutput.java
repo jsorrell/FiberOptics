@@ -2,6 +2,7 @@ package com.jsorrell.fiberoptics.connection;
 
 import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
@@ -13,6 +14,10 @@ public class OpticalFiberOutput extends OpticalFiberConnection {
   @SuppressWarnings("unused")
   public OpticalFiberOutput(ByteBuf buf) {
     super(buf);
+  }
+
+  public OpticalFiberOutput(NBTTagCompound compound) {
+    super(compound);
   }
 
   @Override

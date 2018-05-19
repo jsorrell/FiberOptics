@@ -66,11 +66,11 @@ public abstract class TileOpticalFiberBase extends TileEntity {
   public static TileOpticalFiberBase getTileEntity(IBlockAccess world, BlockPos pos) {
     TileEntity testTile = world.getTileEntity(pos);
     if (testTile == null) {
-      FiberOptics.LOGGER.log(Level.WARNING, "Tile Entity does not exist: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+      FiberOptics.LOGGER.log(Level.WARNING, "Tile Entity at " + pos + " does not exist: " + Arrays.toString(Thread.currentThread().getStackTrace()));
       return null;
     }
     if (!(testTile instanceof TileOpticalFiberBase)) {
-      FiberOptics.LOGGER.log(Level.WARNING, "Tile is not instance of TileOpticalFiberBase: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+      FiberOptics.LOGGER.log(Level.WARNING, "Tile at " + pos + " is not instance of TileOpticalFiberBase: " + Arrays.toString(Thread.currentThread().getStackTrace()));
       return null;
     }
 

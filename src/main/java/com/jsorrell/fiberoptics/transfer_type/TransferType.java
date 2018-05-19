@@ -5,13 +5,15 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 
+import javax.annotation.Nonnull;
+
 //TODO improve this api
 public abstract class TransferType<T> {
   public abstract Capability<?> getCapability();
 
-  public abstract boolean isOffering(T input);
+  public abstract boolean isOffering(@Nonnull T input);
 
-  public abstract boolean doTransfer(T input, T output);
+  public abstract boolean doTransfer(@Nonnull T input, @Nonnull T output);
 
   public boolean isSource(TileEntity tile, EnumFacing side) {
     return tile.hasCapability(getCapability(), side);

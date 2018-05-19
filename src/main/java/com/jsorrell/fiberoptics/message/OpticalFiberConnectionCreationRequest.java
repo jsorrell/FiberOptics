@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.message;
 
 import com.jsorrell.fiberoptics.FiberOptics;
+import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
 import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
 import io.netty.buffer.ByteBuf;
@@ -73,7 +74,10 @@ public class OpticalFiberConnectionCreationRequest implements IMessage {
         return null;
       }
 
-      TileOpticalFiberController controllerTile = message.connection.getController(serverPlayer.world);
+      System.out.println(message.connection.getPos());
+
+      TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(serverPlayer.world, message.connection.getPos());
+      TileOpticalFiberController controllerTile = TileOpticalFiberController.getTileEntity(serverPlayer.world, tile.getControllerPos());
       // Must be run on main thread not network thread
       serverPlayer.getServerWorld().addScheduledTask(() -> controllerTile.addConnection(message.connection));
       return null;

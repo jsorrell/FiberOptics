@@ -27,4 +27,13 @@ public class ModTransferTypes {
     }
     return null;
   }
+
+  public static TransferType fromUnlocalizedName(String unlocalizedName) {
+    for (TransferType value : VALUES) {
+      if (value.getUnlocalizedName().equals(unlocalizedName)) {
+        return value;
+      }
+    }
+    return null;
+  }
 }

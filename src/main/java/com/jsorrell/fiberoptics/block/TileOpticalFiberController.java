@@ -1,16 +1,21 @@
 package com.jsorrell.fiberoptics.block;
 
+import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.connection.OpticalFiberOutput;
 import com.jsorrell.fiberoptics.transfer_type.ModTransferTypes;
 import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
 
 public class TileOpticalFiberController extends TileOpticalFiberBase implements ITickable {
   private final List<OpticalFiberInput> inputConnections = new ArrayList<>();
@@ -42,41 +47,12 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
     return true;
   }
 
-  // Should be adjacent networks
-  //TODO migrate data
-  // TODO: Maybe store the controller as pointer and change this and consolidate if the number if different pointers gets too big. do the math on bigO
-  public void cannibalizeController(TileOpticalFiberController oldController) {
-    this.world.removeTileEntity(oldController.getPos());
-    TileOpticalFiber newFiberTile = new TileOpticalFiber();
-    this.world.setTileEntity(oldController.getPos(), newFiberTile);
-    newFiberTile.setControllerPos(this.pos);
-    updateControllerPosition(oldController.pos, this.pos);
+  void importData(TileOpticalFiberController oldController) {
+    //TODO implement
   }
 
-  private void updateControllerPosition(BlockPos oldController, BlockPos newController) {
-    //TODO parallelize
-    Set<BlockPos> complete = Collections.synchronizedSet(new HashSet<>());
-    ConcurrentLinkedQueue<BlockPos> frontier = new ConcurrentLinkedQueue<>();
-    frontier.add(oldController);
-
-
-    while (!frontier.isEmpty()) {
-      BlockPos newFiber = frontier.poll();
-      complete.add(newFiber);
-      if (newFiber != oldController) {
-        if (world.getTileEntity(newFiber) instanceof TileOpticalFiberController) {
-        }
-        TileOpticalFiber tile = (TileOpticalFiber) world.getTileEntity(newFiber);
-        tile.setControllerPos(newController);
-      }
-      Set<BlockPos> neighbors = ModBlocks.opticalFiber.getConnectedFibers(world, newFiber);
-      for (BlockPos neighbor : neighbors) {
-        TileOpticalFiberBase testTile = (TileOpticalFiberBase)world.getTileEntity(neighbor);
-        if (!testTile.getControllerPos().equals(newController) && !complete.contains(neighbor)) {
-          frontier.add(neighbor);
-        }
-      }
-    }
+  void splitData(TileOpticalFiberController controller, Set<BlockPos> networkElements) {
+    //TODO implement
   }
 
   public boolean addConnection(OpticalFiberConnection connection) {
@@ -88,6 +64,8 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
       outputs.add((OpticalFiberOutput) connection);
     }
 
+    this.markDirty();
+
     System.out.println("Add Connection");
     System.out.println(connection.getClass());
     System.out.println(connection.getPos());
@@ -97,13 +75,50 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
     return true;
   }
 
+  public void removeAllConnectionsForPos(BlockPos pos) {
+
+  }
+
   @Override
   public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    /* Write Inputs */
+    NBTTagList inputs = new NBTTagList();
+    for (int i = 0; i < inputConnections.size(); i++) {
+      NBTTagCompound connectionNBT = new NBTTagCompound();
+      inputs.appendTag(inputConnections.get(i).writeToNBT(connectionNBT));
+    }
+    compound.setTag("inputs", inputs);
+
+    /* Write Outputs */
+    NBTTagList outputs = new NBTTagList();
+    for (int i = 0; i < outputConnections.length; i++) {
+      if (outputConnections[i] == null) {
+        continue;
+      }
+      for (int j = 0; j < outputConnections[i].size(); j++) {
+        NBTTagCompound connectionNBT = new NBTTagCompound();
+        outputs.appendTag(((OpticalFiberOutput)outputConnections[i].get(j)).writeToNBT(connectionNBT));
+      }
+    }
+    compound.setTag("outputs", outputs);
+
     return super.writeToNBT(compound);
   }
 
   @Override
   public void readFromNBT(NBTTagCompound compound) {
+    /* Read Inputs */
+    NBTTagList inputs = compound.getTagList("inputs", Constants.NBT.TAG_COMPOUND);
+    for (int i = 0; i < inputs.tagCount(); i++) {
+      this.addConnection(new OpticalFiberInput(inputs.getCompoundTagAt(i)));
+    }
+
+    /* Read Outputs */
+    NBTTagList outputs = compound.getTagList("outputs", Constants.NBT.TAG_COMPOUND);
+    for (int i = 0; i < outputs.tagCount(); i++) {
+      this.addConnection(new OpticalFiberOutput(outputs.getCompoundTagAt(i)));
+    }
+
     super.readFromNBT(compound);
   }
 
@@ -121,5 +136,19 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
         }
       }
     }
+  }
+
+  public static TileOpticalFiberController getTileEntity(IBlockAccess world, BlockPos pos) {
+    TileEntity testTile = world.getTileEntity(pos);
+    if (testTile == null) {
+      FiberOptics.LOGGER.log(Level.WARNING, "Tile Entity at " + pos + " does not exist: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+      return null;
+    }
+    if (!(testTile instanceof TileOpticalFiberController)) {
+      FiberOptics.LOGGER.log(Level.WARNING, "Tile at " + pos + " is not instance of TileOpticalFiberController: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+      return null;
+    }
+
+    return (TileOpticalFiberController) testTile;
   }
 }

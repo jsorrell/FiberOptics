@@ -1,11 +1,15 @@
 package com.jsorrell.fiberoptics.connection;
 
+import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+
+import java.util.logging.Level;
 
 public class OpticalFiberInput extends OpticalFiberConnection {
   public OpticalFiberInput(BlockPos pos, EnumFacing connectedSide, TransferType transferType) {
@@ -17,6 +21,10 @@ public class OpticalFiberInput extends OpticalFiberConnection {
     super(buf);
   }
 
+  public OpticalFiberInput(NBTTagCompound compound) {
+    super(compound);
+  }
+
   @Override
   public TransferDirection getTransferDirection() {
     return TransferDirection.INPUT;
@@ -25,10 +33,16 @@ public class OpticalFiberInput extends OpticalFiberConnection {
 
   /**
    * Checks if the input has things to transfer.
-   * @param worldIn
+   * @param worldIn The world
    */
   public boolean isOffering(IBlockAccess worldIn) {
-    return this.getTransferType().isOffering(getCapabilityHandler(worldIn));
+    //TODO remove and ensure that these are never null
+    Object inputCapabilityHandler = this.getCapabilityHandler(worldIn);
+    if (inputCapabilityHandler == null) {
+      FiberOptics.LOGGER.log(Level.WARNING, "Should probably never get here. Handle this case another way.");
+      return false;
+    }
+    return this.getTransferType().isOffering(inputCapabilityHandler);
   }
 
   /**
@@ -38,6 +52,13 @@ public class OpticalFiberInput extends OpticalFiberConnection {
    * @return Transfer occurred
    */
   public boolean doTransfer(World worldIn, OpticalFiberOutput output) {
-    return this.getTransferType().doTransfer(getCapabilityHandler(worldIn), output.getCapabilityHandler(worldIn));
+    //TODO remove and ensure that these are never null
+    Object inputCapabilityHandler = this.getCapabilityHandler(worldIn);
+    Object outputCapabilityHandler = output.getCapabilityHandler(worldIn);
+    if (inputCapabilityHandler == null || outputCapabilityHandler == null) {
+      FiberOptics.LOGGER.log(Level.WARNING, "Should probably never get here. Handle this case another way.");
+      return false;
+    }
+    return this.getTransferType().doTransfer(inputCapabilityHandler, outputCapabilityHandler);
   }
 }
