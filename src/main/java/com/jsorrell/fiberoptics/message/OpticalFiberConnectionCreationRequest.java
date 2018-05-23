@@ -1,11 +1,10 @@
 package com.jsorrell.fiberoptics.message;
 
 import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
-import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -19,7 +18,7 @@ import static com.google.common.base.Ascii.NUL;
 public class OpticalFiberConnectionCreationRequest implements IMessage {
   public OpticalFiberConnectionCreationRequest() {}
 
-  OpticalFiberConnection connection;
+  private OpticalFiberConnection connection;
 
   public OpticalFiberConnectionCreationRequest(OpticalFiberConnection connection) {
     this.connection = connection;
@@ -67,19 +66,16 @@ public class OpticalFiberConnectionCreationRequest implements IMessage {
         return null;
       }
 
-      EntityPlayerMP serverPlayer = ctx.getServerHandler().player;
+      WorldServer world = ctx.getServerHandler().player.getServerWorld();
 
       // Prevent arbitrary chunk generation
-      if (!serverPlayer.world.isBlockLoaded(message.connection.getPos())) {
+      if (!world.isBlockLoaded(message.connection.pos)) {
         return null;
       }
 
-      System.out.println(message.connection.getPos());
-
-      TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(serverPlayer.world, message.connection.getPos());
-      TileOpticalFiberController controllerTile = TileOpticalFiberController.getTileEntity(serverPlayer.world, tile.getControllerPos());
       // Must be run on main thread not network thread
-      serverPlayer.getServerWorld().addScheduledTask(() -> controllerTile.addConnection(message.connection));
+      //TODO use result of this to send response of success or failure?
+      world.addScheduledTask(() -> message.connection.initialize(world));
       return null;
     }
   }

@@ -1,13 +1,11 @@
-package com.jsorrell.fiberoptics.transfer_type;
+package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
-import com.jsorrell.fiberoptics.FiberOptics;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
-import java.util.logging.Level;
 
 public class TransferTypeFluids extends TransferType<IFluidHandler> {
   @Override

@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.transfer_type;
+package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.tileentity.TileEntity;
@@ -27,5 +27,10 @@ public abstract class TransferType<T> {
 
   public String getName() {
     return I18n.format("transfer_type." + getUnlocalizedName() + ".name");
+  }
+
+  @Override
+  public String toString() {
+    return getName();
   }
 }

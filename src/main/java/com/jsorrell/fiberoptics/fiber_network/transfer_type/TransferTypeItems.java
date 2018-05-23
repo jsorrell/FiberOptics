@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.transfer_type;
+package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.capabilities.Capability;

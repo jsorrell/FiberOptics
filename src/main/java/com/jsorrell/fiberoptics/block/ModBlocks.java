@@ -1,5 +1,8 @@
 package com.jsorrell.fiberoptics.block;
 
+import com.jsorrell.fiberoptics.block.OpticalFiber.BlockOpticalFiber;
+import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiber;
+import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberController;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.registry.GameRegistry;

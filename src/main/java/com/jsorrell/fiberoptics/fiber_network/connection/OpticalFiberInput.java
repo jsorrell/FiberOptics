@@ -1,7 +1,7 @@
-package com.jsorrell.fiberoptics.connection;
+package com.jsorrell.fiberoptics.fiber_network.connection;
 
 import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.transfer_type.TransferType;
+import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -9,11 +9,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import java.util.List;
 import java.util.logging.Level;
 
-public class OpticalFiberInput extends OpticalFiberConnection {
-  public OpticalFiberInput(BlockPos pos, EnumFacing connectedSide, TransferType transferType) {
-    super(pos, connectedSide, transferType);
+public final class OpticalFiberInput extends OpticalFiberConnection {
+  // Outputs that match transfer type and channel
+  public List<OpticalFiberOutput> matchingOutputs;
+
+  public OpticalFiberInput(BlockPos pos, EnumFacing connectedSide, TransferType transferType, String channelName) {
+    super(pos, connectedSide, transferType, channelName);
   }
 
   @SuppressWarnings("unused")
@@ -42,7 +46,7 @@ public class OpticalFiberInput extends OpticalFiberConnection {
       FiberOptics.LOGGER.log(Level.WARNING, "Should probably never get here. Handle this case another way.");
       return false;
     }
-    return this.getTransferType().isOffering(inputCapabilityHandler);
+    return this.transferType.isOffering(inputCapabilityHandler);
   }
 
   /**
@@ -59,6 +63,6 @@ public class OpticalFiberInput extends OpticalFiberConnection {
       FiberOptics.LOGGER.log(Level.WARNING, "Should probably never get here. Handle this case another way.");
       return false;
     }
-    return this.getTransferType().doTransfer(inputCapabilityHandler, outputCapabilityHandler);
+    return this.transferType.doTransfer(inputCapabilityHandler, outputCapabilityHandler);
   }
 }

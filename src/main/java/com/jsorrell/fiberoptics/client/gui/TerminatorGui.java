@@ -1,12 +1,12 @@
 package com.jsorrell.fiberoptics.client.gui;
 
-import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.connection.OpticalFiberConnection;
-import com.jsorrell.fiberoptics.connection.OpticalFiberInput;
-import com.jsorrell.fiberoptics.connection.OpticalFiberOutput;
+import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.OpticalFiberConnectionCreationRequest;
-import com.jsorrell.fiberoptics.transfer_type.TransferType;
+import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.EnumFacing;
@@ -113,9 +113,9 @@ public class TerminatorGui extends GuiScreen {
     public void actionPerformed(GuiButton button) throws IOException {
       OpticalFiberConnection connection;
       if (button.id == INPUT_BUTTON) {
-        connection = new OpticalFiberInput(tile.getPos(), connectionFacing, transferType);
+        connection = new OpticalFiberInput(tile.getPos(), connectionFacing, transferType, "channel1");
       } else {
-        connection = new OpticalFiberOutput(tile.getPos(), connectionFacing, transferType);
+        connection = new OpticalFiberOutput(tile.getPos(), connectionFacing, transferType, "channel1", 1);
       }
 
       FiberOpticsPacketHandler.INSTANCE.sendToServer(new OpticalFiberConnectionCreationRequest(connection));

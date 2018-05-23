@@ -1,6 +1,6 @@
 package com.jsorrell.fiberoptics;
 
-import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.client.gui.TerminatorGui;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;

@@ -1,12 +1,9 @@
 package com.jsorrell.fiberoptics.item;
 
-import com.jsorrell.fiberoptics.block.BlockOpticalFiber;
-import com.jsorrell.fiberoptics.block.ModBlocks;
-import com.jsorrell.fiberoptics.block.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.block.TileOpticalFiberController;
+import com.jsorrell.fiberoptics.block.OpticalFiber.BlockOpticalFiber;
+import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -22,7 +19,9 @@ public class ItemDebugTool extends ItemBase {
   @Override
   public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
     if (worldIn.isRemote) {
-      return EnumActionResult.PASS;
+      player.sendStatusMessage(new TextComponentString("Client:"), false);
+    } else {
+      player.sendStatusMessage(new TextComponentString("Server:"), false);
     }
 
     Block targetBlock = worldIn.getBlockState(pos).getBlock();
@@ -33,30 +32,7 @@ public class ItemDebugTool extends ItemBase {
         return EnumActionResult.PASS;
       }
 
-      TileOpticalFiberController controller;
-
-      if (tile.isController()) {
-        player.sendStatusMessage(new TextComponentString("Is Controller"), false);
-        controller = (TileOpticalFiberController)tile;
-      } else {
-        BlockPos controllerPos = tile.getControllerPos();
-        if (controllerPos == null) {
-          player.sendStatusMessage(new TextComponentString("Controller Position: No controller saved."), false);
-          return EnumActionResult.PASS;
-        }
-        TileEntity storedController = worldIn.getTileEntity(controllerPos);
-        if (!(storedController instanceof TileOpticalFiberController)) {
-          player.sendStatusMessage(new TextComponentString("Controller stored is invalid: " + storedController), false);
-          return EnumActionResult.PASS;
-        }
-        controller = ((TileOpticalFiberController) storedController);
-      }
-
-      if (player.isSneaking()) {
-        player.sendStatusMessage(new TextComponentString("Network: " + ModBlocks.opticalFiber.getNetworkedFibers(worldIn, pos, null)), false);
-      } else {
-        player.sendStatusMessage(new TextComponentString("Controller Position: " + controller.getPos()), false);
-      }
+      player.sendStatusMessage(new TextComponentString(System.identityHashCode(tile) + " : " + tile.serializeNBT().toString()), false);
     }
     return EnumActionResult.PASS;
   }
