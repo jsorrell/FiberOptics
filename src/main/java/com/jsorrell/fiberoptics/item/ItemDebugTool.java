@@ -1,7 +1,7 @@
 package com.jsorrell.fiberoptics.item;
 
-import com.jsorrell.fiberoptics.block.OpticalFiber.BlockOpticalFiber;
-import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
+import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumActionResult;

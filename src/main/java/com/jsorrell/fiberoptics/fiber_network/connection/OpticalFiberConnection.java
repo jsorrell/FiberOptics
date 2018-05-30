@@ -1,6 +1,6 @@
 package com.jsorrell.fiberoptics.fiber_network.connection;
 
-import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
@@ -9,11 +9,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
 import javax.annotation.Nonnull;
-import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -70,15 +70,28 @@ public abstract class OpticalFiberConnection {
     OUTPUT
   }
 
+  public static OpticalFiberConnection fromKeyedBytes(ByteBuf buf) {
+    int transferDirection = buf.readInt();
+    if (transferDirection == TransferDirection.INPUT.ordinal()) {
+      return new OpticalFiberInput(buf);
+    } else {
+      return new OpticalFiberOutput(buf);
+    }
+  }
+
   public TileEntity getConnectedTile(IBlockAccess worldIn) {
     BlockPos connectedTilePos = this.pos.offset(this.connectedSide);
     return worldIn.getTileEntity(connectedTilePos);
   }
 
-  @SuppressWarnings("unchecked")
+  @Nullable
   protected Object getCapabilityHandler(IBlockAccess worldIn) {
     TileEntity connectedTile = worldIn.getTileEntity(pos.offset(this.connectedSide));
-    return connectedTile.getCapability(this.transferType.getCapability(), this.connectedSide.getOpposite());
+    if (connectedTile == null) {
+      return null;
+    }
+    Capability<?> capability = this.transferType.getCapability();
+    return connectedTile.getCapability(capability, this.connectedSide.getOpposite());
   }
 
   public abstract TransferDirection getTransferDirection();
@@ -90,6 +103,11 @@ public abstract class OpticalFiberConnection {
     buf.writeInt(connectedSide.getIndex());
     buf.writeInt(ModTransferTypes.getIndex(transferType));
     ByteBufUtils.writeUTF8String(buf, channelName);
+  }
+
+  public void toKeyedBytes(ByteBuf buf) {
+    buf.writeInt(this.getTransferDirection().ordinal());
+    this.toBytes(buf);
   }
 
   public NBTTagCompound serializeNBT() {

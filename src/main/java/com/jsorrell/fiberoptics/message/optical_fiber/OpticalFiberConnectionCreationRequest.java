@@ -1,7 +1,6 @@
-package com.jsorrell.fiberoptics.message;
+package com.jsorrell.fiberoptics.message.optical_fiber;
 
 import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.block.OpticalFiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.world.WorldServer;

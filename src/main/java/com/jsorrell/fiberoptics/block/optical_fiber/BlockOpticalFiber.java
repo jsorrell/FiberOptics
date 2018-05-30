@@ -1,22 +1,36 @@
-package com.jsorrell.fiberoptics.block.OpticalFiber;
+package com.jsorrell.fiberoptics.block.optical_fiber;
 
+import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.block.BlockTileEntityBase;
+import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiConnectionChooser;
+import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiSideChooser;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.item.ModItems;
+import com.jsorrell.fiberoptics.item.Terminator;
+import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenSideChooser;
+import com.sun.xml.internal.ws.api.pipe.Fiber;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.ChunkCache;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import org.lwjgl.Sys;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -102,12 +116,18 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
             isFiberInPos(worldIn, pos.offset(EnumFacing.WEST)),
             isFiberInPos(worldIn, pos.offset(EnumFacing.EAST))
     };
-    List<OpticalFiberConnection> connections = TileOpticalFiberBase.getTileEntity(worldIn, pos).getConnections();
 
-    if (connections != null) {
-      for (OpticalFiberConnection connection : connections) {
-        directions[connection.connectedSide.getIndex()] = true;
-      }
+    TileEntity tile = worldIn instanceof ChunkCache ? ((ChunkCache) worldIn).getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK) : worldIn.getTileEntity(pos);
+    List<OpticalFiberConnection> connections;
+    if (tile instanceof TileOpticalFiberBase) {
+      connections = ((TileOpticalFiberBase) tile).getConnections();
+    } else {
+      // TODO get connected directions with packet
+      connections = new ArrayList<>();
+    }
+
+    for (OpticalFiberConnection connection : connections) {
+      directions[connection.connectedSide.getIndex()] = true;
     }
 
     return state.withProperty(downConnected, directions[EnumFacing.DOWN.getIndex()])
@@ -172,21 +192,18 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     return newController;
   }
 
-  @Override
-  public boolean hasTileEntity(IBlockState state) {
-    return super.hasTileEntity(state);
-  }
-
   @Nonnull
   @Override
   public IBlockState getStateForPlacement(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ, int meta, @Nonnull EntityLivingBase placer, EnumHand hand) {
     IBlockState superState = super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer, hand);
+    // If there are no connected fibers, this is placed as a controller
     return superState.withProperty(isController, getConnectedFibers(world, pos).isEmpty());
   }
 
   @Nullable
   @Override
   public TileEntity createTileEntity(@Nonnull World world, @Nonnull IBlockState state) {
+    if (world.isRemote) return null;
     if (state.getValue(isController)) {
       return new TileOpticalFiberController();
     } else {
@@ -195,9 +212,47 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     }
   }
 
+//  @Override
+//  public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+//    if (state.getValue(isController)) {
+//      // We created a new network containing only ourselves
+//      assert worldIn.getTileEntity(pos) instanceof TileOpticalFiberController;
+//    } else {
+//      TileOpticalFiber tile = TileOpticalFiber.getTileEntity(worldIn, pos);
+//
+//      // Find which controllers we joined
+//      Stack<TileOpticalFiberController> connectedControllers = new Stack<>();
+//      for (EnumFacing direction : EnumFacing.VALUES) {
+//        if (isFiberInPos(worldIn, pos.offset(direction))) {
+//          TileOpticalFiberController con = TileOpticalFiberBase.getTileEntity(worldIn, pos.offset(direction)).getController();
+//          if (!connectedControllers.contains(con)) connectedControllers.push(con);
+//        }
+//      }
+//      assert (!connectedControllers.empty());
+//
+//      // Connect to existing network
+//      // Choose first connected controller to consolidate into
+//      TileOpticalFiberController primaryController = connectedControllers.pop();
+//      primaryController.addFiber(tile);
+//
+//      // If connecting multiple networks, consolidate them
+//      while (!connectedControllers.empty()) {
+//          TileOpticalFiberController secondaryController = connectedControllers.pop();
+//          assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
+//          surrenderControllerStatus(worldIn, secondaryController);
+//        assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
+//          primaryController.cannibalize(secondaryController);
+//      }
+//    }
+//  }
 
   @Override
-  public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+  public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+    placeFiber(worldIn, pos, state);
+    super.onBlockAdded(worldIn, pos, state);
+  }
+
+  private void placeFiber(World worldIn, BlockPos pos, IBlockState state) {
     if (state.getValue(isController)) {
       // We created a new network containing only ourselves
       assert worldIn.getTileEntity(pos) instanceof TileOpticalFiberController;
@@ -221,11 +276,11 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
 
       // If connecting multiple networks, consolidate them
       while (!connectedControllers.empty()) {
-          TileOpticalFiberController secondaryController = connectedControllers.pop();
-          assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
-          surrenderControllerStatus(worldIn, secondaryController);
+        TileOpticalFiberController secondaryController = connectedControllers.pop();
         assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
-          primaryController.cannibalize(secondaryController);
+        surrenderControllerStatus(worldIn, secondaryController);
+        assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
+        primaryController.cannibalize(secondaryController);
       }
     }
   }
@@ -306,12 +361,19 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   }
 
   // Record the fiber tile and call once broken. Similar to breakBlock except called on both server and client and the tile is passed in.
+//  @Override
+//  public boolean removedByPlayer(IBlockState state, World worldIn, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+//    TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
+//    boolean res = super.removedByPlayer(state, worldIn, pos, player, willHarvest);
+//    breakFiber(worldIn, pos, tile);
+//    return res;
+//  }
+
   @Override
-  public boolean removedByPlayer(IBlockState state, World worldIn, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+  public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
     TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
-    boolean res = super.removedByPlayer(state, worldIn, pos, player, willHarvest);
     breakFiber(worldIn, pos, tile);
-    return res;
+    super.breakBlock(worldIn, pos, state);
   }
 
   /**
@@ -327,4 +389,25 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
       formNewNetworks(worldIn, pos, controller);
     }
   }
+
+  @Override
+  public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+
+    if (ModItems.terminator == playerIn.getHeldItem(hand).getItem()) {
+      if (!worldIn.isRemote) {
+        if (playerIn.isSneaking()) {
+          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenSideChooser(pos), (EntityPlayerMP) playerIn);
+        } else {
+          System.out.println("send packet open connections");
+          TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
+          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(pos, facing, tile.getConnections(facing)), (EntityPlayerMP) playerIn);
+        }
+      }
+      return true;
+    }
+
+    return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
+  }
+
+
 }

@@ -37,13 +37,12 @@ public final class OpticalFiberInput extends OpticalFiberConnection {
 
   /**
    * Checks if the input has things to transfer.
-   * @param worldIn The world
+   * @param worldIn the world.
    */
+  @SuppressWarnings("unchecked")
   public boolean isOffering(IBlockAccess worldIn) {
-    //TODO remove and ensure that these are never null
     Object inputCapabilityHandler = this.getCapabilityHandler(worldIn);
     if (inputCapabilityHandler == null) {
-      FiberOptics.LOGGER.log(Level.WARNING, "Should probably never get here. Handle this case another way.");
       return false;
     }
     return this.transferType.isOffering(inputCapabilityHandler);
@@ -51,16 +50,15 @@ public final class OpticalFiberInput extends OpticalFiberConnection {
 
   /**
    * Attempts to transfer to the output.
-   * @param worldIn World
-   * @param output Where to transfer to
-   * @return Transfer occurred
+   * @param worldIn world.
+   * @param output where to transfer to.
+   * @return transfer occurred.
    */
+  @SuppressWarnings("unchecked")
   public boolean doTransfer(World worldIn, OpticalFiberOutput output) {
-    //TODO remove and ensure that these are never null
     Object inputCapabilityHandler = this.getCapabilityHandler(worldIn);
     Object outputCapabilityHandler = output.getCapabilityHandler(worldIn);
     if (inputCapabilityHandler == null || outputCapabilityHandler == null) {
-      FiberOptics.LOGGER.log(Level.WARNING, "Should probably never get here. Handle this case another way.");
       return false;
     }
     return this.transferType.doTransfer(inputCapabilityHandler, outputCapabilityHandler);

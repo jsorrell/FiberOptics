@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.block.OpticalFiber;
+package com.jsorrell.fiberoptics.block.optical_fiber;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
@@ -13,7 +13,7 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 public class TileOpticalFiber extends TileOpticalFiberBase {
 
-//  private BlockPos controllerPos = null;
+  private BlockPos controllerPos = null;
   private TileOpticalFiberController controller = null;
 
   // Needed by Forge
@@ -29,7 +29,12 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
 
   @Override
   public TileOpticalFiberController getController() {
-    if (this.controller == null) throw new NullPointerException("Controller stored in fiber at " + this.pos + " is null.");
+    if (this.controllerPos == null) {
+      throw new NullPointerException("Controller stored in fiber at " + this.pos + " is null.");
+    }
+    if (this.controller == null) {
+      this.controller = TileOpticalFiberController.getTileEntity(this.world, controllerPos);
+    }
     return this.controller;
   }
 
@@ -39,6 +44,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
    */
   void setControllerPos(BlockPos pos) {
     Objects.requireNonNull(pos, "Setting controller to null");
+    this.controllerPos = pos.toImmutable();
     this.controller = TileOpticalFiberController.getTileEntity(this.world, pos);
     this.markDirty();
   }
@@ -62,7 +68,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
       int controllerX = controllerPos.getInteger("x");
       int controllerY = controllerPos.getInteger("y");
       int controllerZ = controllerPos.getInteger("z");
-      this.controller = TileOpticalFiberController.getTileEntity(this.world, new BlockPos(controllerX, controllerY, controllerZ));
+      this.controllerPos = new BlockPos(controllerX, controllerY, controllerZ);
     }
     super.readFromNBT(compound);
   }

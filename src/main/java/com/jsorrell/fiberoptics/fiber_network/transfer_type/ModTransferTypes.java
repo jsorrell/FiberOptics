@@ -1,5 +1,11 @@
 package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
+import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ModTransferTypes {
   public static final TransferTypeItems ITEMS = new TransferTypeItems();
   public static final TransferTypeFluids FORGE_FLUIDS = new TransferTypeFluids();
@@ -18,14 +24,14 @@ public class ModTransferTypes {
         return i;
       }
     }
-    return -1;
+    throw new IllegalArgumentException("Invalid transfer type.");
   }
 
   public static TransferType fromIndex(int i) {
     if (0 <= i && i < VALUES.length) {
       return VALUES[i];
     }
-    return null;
+    throw new IndexOutOfBoundsException("Index is not transfer type.");
   }
 
   public static TransferType fromUnlocalizedName(String unlocalizedName) {
@@ -34,6 +40,6 @@ public class ModTransferTypes {
         return value;
       }
     }
-    return null;
+    throw new IllegalArgumentException("Invalid tranfer type.");
   }
 }

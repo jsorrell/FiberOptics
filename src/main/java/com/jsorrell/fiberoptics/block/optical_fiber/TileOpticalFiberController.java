@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.block.OpticalFiber;
+package com.jsorrell.fiberoptics.block.optical_fiber;
 
 import com.jsorrell.fiberoptics.fiber_network.FiberNetwork;
 import mcp.MethodsReturnNonnullByDefault;
@@ -96,5 +96,11 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
       throw new ClassCastException("Tile at " + pos + "  is not instance of TileOpticalFiberController");
     }
     return (TileOpticalFiberController) testTile;
+  }
+
+  @Override
+  public void onChunkUnload() {
+    //TODO
+    super.onChunkUnload();
   }
 }

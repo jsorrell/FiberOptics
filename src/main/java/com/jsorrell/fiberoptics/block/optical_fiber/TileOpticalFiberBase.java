@@ -1,5 +1,6 @@
-package com.jsorrell.fiberoptics.block.OpticalFiber;
+package com.jsorrell.fiberoptics.block.optical_fiber;
 
+import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
@@ -17,6 +18,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -138,11 +140,21 @@ public abstract class TileOpticalFiberBase extends TileEntity {
 
   /**
    * Gets all connections to the {@link TileOpticalFiberBase}.
+   * @param side the side to get connections on or null for all sides.
    * @return a list of all connections.
    */
-  @Nullable
-  public List<OpticalFiberConnection> getConnections() {
-    return this.connections == null ? null : new ArrayList<>(this.connections);
+  public ImmutableList<OpticalFiberConnection> getConnections(@Nullable EnumFacing side) {
+    if (this.connections == null) return ImmutableList.of();
+
+    if (side == null) {
+      return ImmutableList.copyOf(this.connections);
+    } else {
+      return ImmutableList.copyOf(this.connections.stream().filter(connection -> side.equals(connection.connectedSide)).collect(Collectors.toList()));
+    }
+  }
+
+  public ImmutableList<OpticalFiberConnection> getConnections() {
+    return this.getConnections(null);
   }
 
   /**
