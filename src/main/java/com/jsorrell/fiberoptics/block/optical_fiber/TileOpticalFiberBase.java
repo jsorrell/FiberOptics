@@ -4,15 +4,18 @@ import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
-import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
@@ -22,7 +25,7 @@ import java.util.stream.Collectors;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public abstract class TileOpticalFiberBase extends TileEntity {
+public abstract class TileOpticalFiberBase extends TileEntity implements IConnectionContainer {
   private Set<OpticalFiberConnection> connections = null;
 
   /**
@@ -31,60 +34,28 @@ public abstract class TileOpticalFiberBase extends TileEntity {
    */
   public abstract BlockPos getControllerPos();
 
+  @Override
+  public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+    return oldState.getValue(BlockOpticalFiber.isController) != newState.getValue(BlockOpticalFiber.isController);
+  }
+
   /**
    * Gets the controller linked to the fiber.
    * @return the controller linked to the fiber1.
    */
   abstract TileOpticalFiberController getController();
 
-  //TODO rewrite this
-  public class PossibleConnection {
-    EnumFacing facing;
-    TransferType transferType;
-    PossibleConnection(EnumFacing facing, TransferType transferType) {
-      this.facing = facing;
-      this.transferType = transferType;
-    }
-
-    public TransferType getTransferType() {
-      return transferType;
-    }
-
-    public EnumFacing getFacing() {
-      return facing;
-    }
-
-    @Override
-    public String toString() {
-      return facing.toString() + " " + transferType.toString();
+  private void setConnectedSide(EnumFacing side) {
+    // Update blockstate and send to clients
+    IBlockState state = this.world.getBlockState(this.pos);
+    PropertyBool property = BlockOpticalFiber.getPropertyFromSide(side);
+    if (!state.getValue(property)) {
+      state = state.withProperty(property, true);
+      this.world.setBlockState(this.pos, state, 2);
     }
   }
 
-  //TODO rewrite this
-  public List<PossibleConnection> getPossibleConnections() {
-    List<PossibleConnection> res = new ArrayList<>(6 * ModTransferTypes.VALUES.length);
-    for (EnumFacing side : EnumFacing.VALUES) {
-      TileEntity testTile = this.world.getTileEntity(this.pos.offset(side));
-      if (testTile == null) {
-        continue;
-      }
-      for (TransferType transferType : ModTransferTypes.VALUES) {
-        //FIXME side direction specific possible connections - only connects to energy insertions
-        if (transferType.isSink(testTile, side.getOpposite()) || transferType.isSource(testTile, side.getOpposite())) {
-          PossibleConnection possibleConnection = new PossibleConnection(side, transferType);
-          res.add(possibleConnection);
-        }
-      }
-    }
-
-    return res;
-  }
-
-  /**
-   * Attempts to add a connection to the network.
-   * @param connection the connection.
-   * @return {@code true} iff the connection was valid and successfully added.
-   */
+  @Override
   public boolean addConnection(OpticalFiberConnection connection) {
     if (!isValidConnectionForNetwork(connection)) return false;
     this.getController().fiberNetwork.addConnection(connection);
@@ -94,21 +65,64 @@ public abstract class TileOpticalFiberBase extends TileEntity {
     if (connectionTile.connections == null) connectionTile.connections = new HashSet<>();
     connectionTile.connections.add(connection);
     connectionTile.markDirty();
+
+    this.setConnectedSide(connection.connectedSide);
+
     return true;
   }
 
-  /**
-   * Attempts to remove a connection from the network.
-   * @param connection the connection.
-   * @return {@code true} iff the connection was in the network and successfully removed.
-   */
+  @Override
   public boolean removeConnection(OpticalFiberConnection connection) {
     if (this.getTileAtPos(connection.pos).connections.remove(connection)) {
       this.getController().fiberNetwork.removeConnection(connection);
       this.markDirty();
+
+      // Update blockstate and send to clients
+      if (BlockOpticalFiber.isFiberInPos(this.world, this.pos.offset(connection.connectedSide))) {
+        // TODO do we need this, should we allow this to happen
+        return true;
+      }
+
+      for (OpticalFiberConnection connection1 : this.connections) {
+        if (connection.connectedSide.equals(connection1.connectedSide)) {
+          // Another connection exists in this direction so don't update state
+          return true;
+        }
+      }
+
+      PropertyBool property = BlockOpticalFiber.getPropertyFromSide(connection.connectedSide);
+      IBlockState state = this.world.getBlockState(this.pos).withProperty(property, false);
+      this.world.setBlockState(this.pos, state, 2);
       return true;
     }
     return false;
+  }
+
+
+  @Override
+  public ImmutableList<OpticalFiberConnection> getConnections(@Nullable EnumFacing side) {
+    if (this.connections == null) return ImmutableList.of();
+
+    if (side == null) {
+      return ImmutableList.copyOf(this.connections);
+    } else {
+      return ImmutableList.copyOf(this.connections.stream().filter(connection -> side.equals(connection.connectedSide)).collect(Collectors.toList()));
+    }
+  }
+
+  @Override
+  public boolean hasConnectionOnSide(EnumFacing side) {
+    if (this.connections == null) return false;
+    return this.connections.stream().anyMatch(connection -> connection.connectedSide.equals(side));
+  }
+
+  /**
+   * Imports the connections from {@code fiber}.
+   * {@code fiber} should not be used after this is called.
+   * @param fiber the fiber to import.
+   */
+  void importConnections(TileOpticalFiberBase fiber) {
+    this.connections = fiber.connections;
   }
 
   /**
@@ -127,34 +141,6 @@ public abstract class TileOpticalFiberBase extends TileEntity {
       tileAtPos = getTileEntity(this.world, pos);
     }
     return tileAtPos;
-  }
-
-  /**
-   * Imports the connections from {@code fiber}.
-   * {@code fiber} should not be used after this is called.
-   * @param fiber the fiber to import.
-   */
-  void importConnections(TileOpticalFiberBase fiber) {
-    this.connections = fiber.connections;
-  }
-
-  /**
-   * Gets all connections to the {@link TileOpticalFiberBase}.
-   * @param side the side to get connections on or null for all sides.
-   * @return a list of all connections.
-   */
-  public ImmutableList<OpticalFiberConnection> getConnections(@Nullable EnumFacing side) {
-    if (this.connections == null) return ImmutableList.of();
-
-    if (side == null) {
-      return ImmutableList.copyOf(this.connections);
-    } else {
-      return ImmutableList.copyOf(this.connections.stream().filter(connection -> side.equals(connection.connectedSide)).collect(Collectors.toList()));
-    }
-  }
-
-  public ImmutableList<OpticalFiberConnection> getConnections() {
-    return this.getConnections(null);
   }
 
   /**
@@ -218,8 +204,7 @@ public abstract class TileOpticalFiberBase extends TileEntity {
     return ret;
   }
 
-  @Override
-  public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+  private NBTTagCompound writeConnectionsToNBT(NBTTagCompound compound) {
     NBTTagList inputs = new NBTTagList();
     NBTTagList outputs = new NBTTagList();
     if (this.connections != null) {
@@ -230,12 +215,20 @@ public abstract class TileOpticalFiberBase extends TileEntity {
     }
     compound.setTag("inputs", inputs);
     compound.setTag("outputs", outputs);
+    return compound;
+  }
+
+  @Override
+  public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    this.writeConnectionsToNBT(compound);
     return super.writeToNBT(compound);
   }
 
   // TODO find a better way of separating inputs and outputs and possibly others
   @Override
   public void readFromNBT(NBTTagCompound compound) {
+    super.readFromNBT(compound); // Read this.pos
+
     NBTTagList inputs = compound.getTagList("inputs", Constants.NBT.TAG_COMPOUND);
     NBTTagList outputs = compound.getTagList("outputs", Constants.NBT.TAG_COMPOUND);
     int numInputs = inputs.tagCount();
@@ -243,14 +236,16 @@ public abstract class TileOpticalFiberBase extends TileEntity {
 
     if (numInputs > 0 || numOutputs > 0) this.connections = new HashSet<>();
 
+
     for (int i = 0; i < numInputs; ++i) {
-      this.connections.add(new OpticalFiberInput(inputs.getCompoundTagAt(i)));
+      OpticalFiberInput input = new OpticalFiberInput(inputs.getCompoundTagAt(i));
+      this.connections.add(input);
     }
 
     for (int i = 0; i < numOutputs; ++i) {
-      this.connections.add(new OpticalFiberOutput(outputs.getCompoundTagAt(i)));
+      OpticalFiberOutput output = new OpticalFiberOutput(outputs.getCompoundTagAt(i));
+      this.connections.add(output);
     }
-    super.readFromNBT(compound);
   }
 
   /**

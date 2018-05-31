@@ -1,23 +1,15 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
-import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.block.BlockTileEntityBase;
-import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiConnectionChooser;
-import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiSideChooser;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.item.ModItems;
-import com.jsorrell.fiberoptics.item.Terminator;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenSideChooser;
-import com.sun.xml.internal.ws.api.pipe.Fiber;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -26,11 +18,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCache;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import org.lwjgl.Sys;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -49,6 +38,17 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   protected static final PropertyBool westConnected = PropertyBool.create("west");
   protected static final PropertyBool isController = PropertyBool.create("controller");
 
+  public static PropertyBool getPropertyFromSide(EnumFacing side) {
+    switch (side) {
+      case UP: return upConnected;
+      case DOWN: return downConnected;
+      case NORTH: return northConnected;
+      case SOUTH: return southConnected;
+      case EAST: return eastConnected;
+      case WEST: return westConnected;
+    }
+    throw new AssertionError("Should never get here.");
+  }
 
   public BlockOpticalFiber() {
     super(Material.ROCK, "optical_fiber");
@@ -108,34 +108,12 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Override
   @Nonnull
   public IBlockState getActualState(@Nonnull IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-    boolean directions[] = {
-            isFiberInPos(worldIn, pos.offset(EnumFacing.DOWN)),
-            isFiberInPos(worldIn, pos.offset(EnumFacing.UP)),
-            isFiberInPos(worldIn, pos.offset(EnumFacing.NORTH)),
-            isFiberInPos(worldIn, pos.offset(EnumFacing.SOUTH)),
-            isFiberInPos(worldIn, pos.offset(EnumFacing.WEST)),
-            isFiberInPos(worldIn, pos.offset(EnumFacing.EAST))
-    };
-
-    TileEntity tile = worldIn instanceof ChunkCache ? ((ChunkCache) worldIn).getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK) : worldIn.getTileEntity(pos);
-    List<OpticalFiberConnection> connections;
-    if (tile instanceof TileOpticalFiberBase) {
-      connections = ((TileOpticalFiberBase) tile).getConnections();
-    } else {
-      // TODO get connected directions with packet
-      connections = new ArrayList<>();
+    for (EnumFacing side : EnumFacing.VALUES) {
+      PropertyBool property = getPropertyFromSide(side);
+      state = state.withProperty(property, state.getValue(property) || isFiberInPos(worldIn, pos.offset(side)));
     }
 
-    for (OpticalFiberConnection connection : connections) {
-      directions[connection.connectedSide.getIndex()] = true;
-    }
-
-    return state.withProperty(downConnected, directions[EnumFacing.DOWN.getIndex()])
-            .withProperty(upConnected, directions[EnumFacing.UP.getIndex()])
-            .withProperty(northConnected, directions[EnumFacing.NORTH.getIndex()])
-            .withProperty(southConnected, directions[EnumFacing.SOUTH.getIndex()])
-            .withProperty(westConnected, directions[EnumFacing.WEST.getIndex()])
-            .withProperty(eastConnected, directions[EnumFacing.EAST.getIndex()]);
+    return state;
   }
 
   /**
@@ -203,7 +181,9 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Nullable
   @Override
   public TileEntity createTileEntity(@Nonnull World world, @Nonnull IBlockState state) {
-    if (world.isRemote) return null;
+    if (world.isRemote) {
+      return new TileOpticalFiberClient();
+    }
     if (state.getValue(isController)) {
       return new TileOpticalFiberController();
     } else {
@@ -211,40 +191,6 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
       return new TileOpticalFiber();
     }
   }
-
-//  @Override
-//  public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-//    if (state.getValue(isController)) {
-//      // We created a new network containing only ourselves
-//      assert worldIn.getTileEntity(pos) instanceof TileOpticalFiberController;
-//    } else {
-//      TileOpticalFiber tile = TileOpticalFiber.getTileEntity(worldIn, pos);
-//
-//      // Find which controllers we joined
-//      Stack<TileOpticalFiberController> connectedControllers = new Stack<>();
-//      for (EnumFacing direction : EnumFacing.VALUES) {
-//        if (isFiberInPos(worldIn, pos.offset(direction))) {
-//          TileOpticalFiberController con = TileOpticalFiberBase.getTileEntity(worldIn, pos.offset(direction)).getController();
-//          if (!connectedControllers.contains(con)) connectedControllers.push(con);
-//        }
-//      }
-//      assert (!connectedControllers.empty());
-//
-//      // Connect to existing network
-//      // Choose first connected controller to consolidate into
-//      TileOpticalFiberController primaryController = connectedControllers.pop();
-//      primaryController.addFiber(tile);
-//
-//      // If connecting multiple networks, consolidate them
-//      while (!connectedControllers.empty()) {
-//          TileOpticalFiberController secondaryController = connectedControllers.pop();
-//          assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
-//          surrenderControllerStatus(worldIn, secondaryController);
-//        assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
-//          primaryController.cannibalize(secondaryController);
-//      }
-//    }
-//  }
 
   @Override
   public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
@@ -360,15 +306,6 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     assert blockDestroyedWasController == originalController.getNetworkBlocks().isEmpty();
   }
 
-  // Record the fiber tile and call once broken. Similar to breakBlock except called on both server and client and the tile is passed in.
-//  @Override
-//  public boolean removedByPlayer(IBlockState state, World worldIn, BlockPos pos, EntityPlayer player, boolean willHarvest) {
-//    TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
-//    boolean res = super.removedByPlayer(state, worldIn, pos, player, willHarvest);
-//    breakFiber(worldIn, pos, tile);
-//    return res;
-//  }
-
   @Override
   public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
     TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
@@ -398,7 +335,6 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
         if (playerIn.isSneaking()) {
           FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenSideChooser(pos), (EntityPlayerMP) playerIn);
         } else {
-          System.out.println("send packet open connections");
           TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
           FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(pos, facing, tile.getConnections(facing)), (EntityPlayerMP) playerIn);
         }

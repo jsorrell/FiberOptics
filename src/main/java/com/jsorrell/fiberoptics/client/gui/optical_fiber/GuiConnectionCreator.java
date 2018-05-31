@@ -1,11 +1,12 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberClient;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionFactory;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.OpticalFiberConnectionCreationRequest;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,9 +43,7 @@ public class GuiConnectionCreator extends GuiConnectionBuilder {
         OpticalFiberConnection connection;
         try {
           connection = connectionFactory.getConnection();
-          System.out.println(connection.getClass());
           FiberOpticsPacketHandler.INSTANCE.sendToServer(new OpticalFiberConnectionCreationRequest(connection));
-//          tile.addConnection(connection); // TODO Don't do if server says invalid?
         } catch (OpticalFiberConnectionFactory.NonDefiningConnectionException e) {
           assert false;
         }

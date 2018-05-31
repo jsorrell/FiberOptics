@@ -68,13 +68,14 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
 
   @Override
   public void readFromNBT(NBTTagCompound compound) {
+    super.readFromNBT(compound);
+
     this.fiberNetwork.deserializeNBT(compound.getCompoundTag("network"));
     NBTTagList connectedBlocks = compound.getTagList("blocks", Constants.NBT.TAG_COMPOUND);
     for (int i = 0; i < connectedBlocks.tagCount(); i++) {
       NBTTagCompound posComp = connectedBlocks.getCompoundTagAt(i);
       this.networkBlocks.add(new BlockPos(posComp.getInteger("x"), posComp.getInteger("y"), posComp.getInteger("z")));
     }
-    super.readFromNBT(compound);
   }
 
   @Override

@@ -42,7 +42,6 @@ public class FiberNetwork implements INBTSerializable<NBTTagCompound> {
     boolean needCreate;
     // Update connections
     Tuple<TransferType, String> subnetwork = new Tuple<>(connection.transferType, connection.channelName);
-    System.out.println("AddConnection: " + subnetwork);
     Threetuple<Set<OpticalFiberInput>, TreeSet<OpticalFiberOutput>, Channel> connections = this.connections.get(subnetwork);
     if (needCreate = connections == null) {
       connections = new Threetuple<>(new HashSet<>(), new TreeSet<>(OpticalFiberOutput.PRIORITY_COMPARATOR), new Channel(connection.channelName));
@@ -102,7 +101,6 @@ public class FiberNetwork implements INBTSerializable<NBTTagCompound> {
    */
   public boolean removeConnection(OpticalFiberConnection connection) {
     Tuple<TransferType, String> subnetwork = new Tuple<>(connection.transferType, connection.channelName);
-    System.out.println("RemoveConnection: " + subnetwork);
     Threetuple<Set<OpticalFiberInput>, TreeSet<OpticalFiberOutput>, Channel> connections = this.connections.get(subnetwork);
 
     if (connections == null) return false;

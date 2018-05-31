@@ -1,14 +1,11 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
 import com.google.common.collect.ImmutableList;
-import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;

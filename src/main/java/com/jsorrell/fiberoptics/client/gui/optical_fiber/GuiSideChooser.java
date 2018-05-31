@@ -1,7 +1,5 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
-import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketSetSide;
 import net.minecraft.client.gui.GuiButton;

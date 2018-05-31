@@ -28,7 +28,6 @@ public class Terminator extends ItemBase {
         if (playerIn.isSneaking()) {
           FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenSideChooser(pos), (EntityPlayerMP) playerIn);
         } else {
-          System.out.println("send packet open connections");
           TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
           FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(pos, facing, tile.getConnections(facing)), (EntityPlayerMP) playerIn);
         }

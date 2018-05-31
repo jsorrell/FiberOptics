@@ -1,6 +1,5 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionFactory;
 import net.minecraft.client.gui.GuiButton;
@@ -27,12 +26,10 @@ public class GuiDirectionChooser extends GuiConnectionBuilder {
   protected void actionPerformed(GuiButton button) {
     switch (button.id) {
       case INPUT_BUTTON_ID: {
-        System.out.println("Setting input");
         this.connectionFactory.setDirection(OpticalFiberConnection.TransferDirection.INPUT);
         break;
       }
       case OUTPUT_BUTTON_ID: {
-        System.out.println("Setting output");
         this.connectionFactory.setDirection(OpticalFiberConnection.TransferDirection.OUTPUT);
         break;
       }

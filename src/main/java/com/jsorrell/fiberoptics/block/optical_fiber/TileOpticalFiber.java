@@ -63,6 +63,8 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
 
   @Override
   public void readFromNBT(NBTTagCompound compound) {
+    super.readFromNBT(compound);
+
     if (compound.hasKey("controller")) {
       NBTTagCompound controllerPos = compound.getCompoundTag("controller");
       int controllerX = controllerPos.getInteger("x");
@@ -70,7 +72,6 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
       int controllerZ = controllerPos.getInteger("z");
       this.controllerPos = new BlockPos(controllerX, controllerY, controllerZ);
     }
-    super.readFromNBT(compound);
   }
 
   /**
