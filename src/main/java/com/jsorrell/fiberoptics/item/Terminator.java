@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.item;
 
 import com.jsorrell.fiberoptics.block.ModBlocks;
+import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
@@ -11,6 +12,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class Terminator extends ItemBase {
@@ -28,8 +30,21 @@ public class Terminator extends ItemBase {
         if (playerIn.isSneaking()) {
           FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenSideChooser(pos), (EntityPlayerMP) playerIn);
         } else {
+          Vec3d hitVec = new Vec3d(hitX, hitY, hitZ);
+          EnumFacing side = null;
+          if (BlockOpticalFiber.getBoundingBoxForConnection(null).contains(hitVec)) {
+            side = facing;
+          } else {
+            for (EnumFacing testSide : EnumFacing.VALUES) {
+              if (BlockOpticalFiber.getBoundingBoxForConnection(testSide).contains(hitVec)) {
+                side = testSide;
+                break;
+              }
+            }
+          }
+          assert side != null;
           TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
-          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(pos, facing, tile.getConnections(facing)), (EntityPlayerMP) playerIn);
+          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(pos, side, tile.getConnections(side)), (EntityPlayerMP) playerIn);
         }
       }
       return EnumActionResult.SUCCESS;

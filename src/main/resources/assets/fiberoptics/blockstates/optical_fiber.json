@@ -4,8 +4,9 @@
     "model": "fiberoptics:optical_fiber"
   },
   "variants": {
-    "inventory": [{
-    }],
+    "inventory": {
+      "transform": "forge:default-block"
+    },
     "up": {
       "true": {
         "submodel": {
