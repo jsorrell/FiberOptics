@@ -4,6 +4,7 @@ import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketClientSync;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -20,7 +21,7 @@ public class TileOpticalFiberClient extends TileEntity {
   private IBlockState cover = null;
 
   public boolean hasConnectionOnSide(EnumFacing side) {
-    return this.connectedSides.get(side.ordinal());
+    return this.connectedSides.get(side.getIndex());
   }
 
   public void setConnectionOnSide(EnumFacing side, boolean hasConnection) {
@@ -46,5 +47,25 @@ public class TileOpticalFiberClient extends TileEntity {
       throw new ClassCastException("Tile at " + pos + "  is not instance of TileOpticalFiberClient");
     }
     return (TileOpticalFiberClient) testTile;
+  }
+
+  @Override
+  public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    NBTTagCompound sides = new NBTTagCompound();
+    for (EnumFacing side : EnumFacing.VALUES) {
+      sides.setBoolean(side.toString(), this.connectedSides.get(side.getIndex()));
+    }
+
+    compound.setTag("sides", sides);
+    return super.writeToNBT(compound);
+  }
+
+  @Override
+  public void readFromNBT(NBTTagCompound compound) {
+    super.readFromNBT(compound);
+    NBTTagCompound sides = compound.getCompoundTag("sides");
+    for (EnumFacing side : EnumFacing.VALUES) {
+      this.connectedSides.set(side.getIndex(), sides.getBoolean(side.toString()));
+    }
   }
 }

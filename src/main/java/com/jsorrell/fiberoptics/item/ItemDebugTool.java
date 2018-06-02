@@ -1,9 +1,9 @@
 package com.jsorrell.fiberoptics.item;
 
-import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.block.optical_fiber.*;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -18,22 +18,42 @@ public class ItemDebugTool extends ItemBase {
 
   @Override
   public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    if (!(worldIn.getBlockState(pos).getBlock() instanceof BlockOpticalFiber)) return EnumActionResult.PASS;
+
+
     if (worldIn.isRemote) {
-      player.sendStatusMessage(new TextComponentString("Client:"), false);
-    } else {
-      player.sendStatusMessage(new TextComponentString("Server:"), false);
-    }
-
-    Block targetBlock = worldIn.getBlockState(pos).getBlock();
-    if (targetBlock instanceof BlockOpticalFiber) {
-      TileOpticalFiberBase tile = ((TileOpticalFiberBase) worldIn.getTileEntity(pos));
-      if (tile == null) {
-        player.sendStatusMessage(new TextComponentString("No tile entity present for optical fiber at " + pos), false);
-        return EnumActionResult.PASS;
+      player.sendStatusMessage(new TextComponentString("\n\n\n"), false);
+      player.sendStatusMessage(new TextComponentString("§2Client:§r"), false);
+      TileEntity testTile = worldIn.getTileEntity(pos);
+      if (testTile == null) {
+        player.sendStatusMessage(new TextComponentString("§4No tile entity present for optical fiber at " + pos + "§r"), false);
+      } else if (!(testTile instanceof TileOpticalFiberClient)) {
+        player.sendStatusMessage(new TextComponentString("§4Tile is of incorrect type " + testTile.getClass() + " at " + pos + "§r"), false);
+      } else {
+        TileOpticalFiberClient tile = (TileOpticalFiberClient) testTile;
+        player.sendStatusMessage(new TextComponentString(tile.serializeNBT().toString()), false);
       }
-
-      player.sendStatusMessage(new TextComponentString(System.identityHashCode(tile) + " : " + tile.serializeNBT().toString()), false);
+    } else {
+      player.sendStatusMessage(new TextComponentString("§9Server:§r"), false);
+      TileEntity testTile = worldIn.getTileEntity(pos);
+      if (testTile == null) {
+        player.sendStatusMessage(new TextComponentString("§4No tile entity present for optical fiber at " + pos + "§r"), false);
+      } else if (!(testTile instanceof TileOpticalFiberBase)) {
+        player.sendStatusMessage(new TextComponentString("§4Tile is of incorrect type " + testTile.getClass() + " at " + pos + "§r"), false);
+      } else {
+        if (testTile instanceof TileOpticalFiberController) {
+          TileOpticalFiberController tile = (TileOpticalFiberController) testTile;
+          player.sendStatusMessage(new TextComponentString("§eController:§r " + tile.serializeNBT().toString()), false);
+        } else {
+          TileOpticalFiber tile = (TileOpticalFiber) testTile;
+          player.sendStatusMessage(new TextComponentString(tile.serializeNBT().toString()), false);
+          if (tile.getControllerPos() == null) {
+            player.sendStatusMessage(new TextComponentString("§4No controller stored at " + pos + "§r"), false);
+          }
+        }
+      }
     }
-    return EnumActionResult.PASS;
+
+    return EnumActionResult.SUCCESS;
   }
 }
