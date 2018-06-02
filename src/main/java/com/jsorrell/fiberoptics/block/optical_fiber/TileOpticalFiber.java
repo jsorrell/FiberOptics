@@ -24,7 +24,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
 
   @Override
   public BlockPos getControllerPos() {
-    return this.getController().getPos();
+    return this.controllerPos;
   }
 
   @Override
@@ -33,7 +33,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
       throw new NullPointerException("Controller stored in fiber at " + this.pos + " is null.");
     }
     if (this.controller == null) {
-      this.controller = TileOpticalFiberController.getTileEntity(this.world, controllerPos);
+      this.controller = TileOpticalFiberController.getTileEntity(this.world, this.controllerPos);
     }
     return this.controller;
   }
@@ -51,11 +51,11 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
 
   @Override
   public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-    if (this.controller != null) {
+    if (this.controllerPos != null) {
       NBTTagCompound controllerPos = new NBTTagCompound();
-      controllerPos.setInteger("x", this.controller.getPos().getX());
-      controllerPos.setInteger("y", this.controller.getPos().getY());
-      controllerPos.setInteger("z", this.controller.getPos().getZ());
+      controllerPos.setInteger("x", this.controllerPos.getX());
+      controllerPos.setInteger("y", this.controllerPos.getY());
+      controllerPos.setInteger("z", this.controllerPos.getZ());
       compound.setTag("controller", controllerPos);
     }
     return super.writeToNBT(compound);
@@ -70,7 +70,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
       int controllerX = controllerPos.getInteger("x");
       int controllerY = controllerPos.getInteger("y");
       int controllerZ = controllerPos.getInteger("z");
-      this.controllerPos = new BlockPos(controllerX, controllerY, controllerZ);
+      this.controllerPos = new BlockPos(controllerX, controllerY, controllerZ).toImmutable();
     }
   }
 
