@@ -1,6 +1,10 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
 import com.jsorrell.fiberoptics.block.BlockTileEntityBase;
+import com.jsorrell.fiberoptics.item.Terminator;
+import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenSideChooser;
 import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -10,6 +14,7 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -18,6 +23,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.NoteBlockEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -312,6 +319,55 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   static void setRenderBlockState(World world, BlockPos pos, IBlockState state) {
     if (!world.getBlockState(pos).equals(state)) {
       world.setBlockState(pos, state, 2 | 16);
+    }
+  }
+
+  @SuppressWarnings({"unused", "WeakerAccess"})
+  @SubscribeEvent (priority = EventPriority.LOW)
+  public void handleRightClick(PlayerInteractEvent.RightClickBlock e) {
+    if (!e.getWorld().isRemote) {
+      if (e.getEntityPlayer().getHeldItem(e.getHand()).getItem() instanceof Terminator) {
+        if (e.getEntityPlayer().isSneaking()) {
+          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenSideChooser(e.getPos()), (EntityPlayerMP) e.getEntityPlayer());
+        } else {
+          Vec3d hitVec = e.getHitVec().subtract(e.getPos().getX(), e.getPos().getY(), e.getPos().getZ());
+          if (BlockOpticalFiber.getBoundingBoxForCenter().contains(hitVec)) {
+            /* HIT CENTER */
+            BlockPos facePos = e.getPos().offset(e.getFace());
+            FiberSideType faceState = e.getWorld().getBlockState(e.getPos()).getValue(BlockOpticalFiber.getPropertyFromSide(e.getFace()));
+            if (BlockOpticalFiber.isFiberInPos(e.getWorld(), facePos)) {
+              /* There is another fiber on the side we hit. Try to join the fibers. */
+              assert faceState == FiberSideType.NONE; // We shouldn't be able to hit a face of the center unless that face doesn't have a connection.
+              FiberSideType adjacentFaceState = e.getWorld().getBlockState(facePos).getValue(BlockOpticalFiber.getPropertyFromSide(e.getFace().getOpposite()));
+              if (adjacentFaceState != FiberSideType.CONNECTION) {
+                OpticalFiberUtil.joinConnection(e.getWorld(), e.getPos(), e.getFace());
+              }
+            } else {
+              /* There is not another fiber on the side we hit. Make a connection */
+              TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), e.getPos(), TileOpticalFiberBase.class);
+              FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(e.getPos(), e.getFace(), tile.getConnections(e.getFace())), (EntityPlayerMP) e.getEntityPlayer());
+            }
+          } else {
+            /* HIT ONE OF THE SIDES */
+            IBlockState state = e.getWorld().getBlockState(e.getPos());
+            for (EnumFacing side : EnumFacing.VALUES) {
+              Optional<AxisAlignedBB> boxOpt = BlockOpticalFiber.getBoundingBoxForPart(state, FiberPart.fromSide(side));
+              if (boxOpt.isPresent() && boxOpt.get().contains(hitVec)) {
+                FiberSideType sideType = state.getValue(BlockOpticalFiber.getPropertyFromSide(side));
+                if (sideType == FiberSideType.SELF_ATTACHMENT) {
+                  /* Hit a self attachment: Split it. */
+                  OpticalFiberUtil.splitConnection(e.getWorld(), e.getPos(), side);
+                } else {
+                  /* Hit a connection: Try to add another to this side. */
+                  assert sideType == FiberSideType.CONNECTION;
+                  TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), e.getPos(), TileOpticalFiberBase.class);
+                  FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(e.getPos(), side, tile.getConnections(side)), (EntityPlayerMP) e.getEntityPlayer());
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

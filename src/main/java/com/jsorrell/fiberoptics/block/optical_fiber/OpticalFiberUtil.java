@@ -10,9 +10,6 @@ import net.minecraft.world.World;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber.getPropertyFromSide;
-import static com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber.isController;
-
 public class OpticalFiberUtil {
 
   /**
@@ -27,7 +24,7 @@ public class OpticalFiberUtil {
     return Arrays.stream(EnumFacing.VALUES)
             .filter(s -> {
               IBlockState state = worldIn.getBlockState(pos.offset(s));
-              return state.getBlock() instanceof BlockOpticalFiber && state.getValue(getPropertyFromSide(s.getOpposite())) != FiberSideType.CONNECTION;
+              return state.getBlock() instanceof BlockOpticalFiber && state.getValue(BlockOpticalFiber.getPropertyFromSide(s.getOpposite())) != FiberSideType.CONNECTION;
             })
             .collect(Collectors.toList());
   }
@@ -51,7 +48,7 @@ public class OpticalFiberUtil {
     assert state.getBlock() instanceof BlockOpticalFiber;
     List<EnumFacing> res = new ArrayList<>(6);
     Arrays.stream(EnumFacing.VALUES)
-            .filter(s -> state.getValue(getPropertyFromSide(s)) == FiberSideType.SELF_ATTACHMENT)
+            .filter(s -> state.getValue(BlockOpticalFiber.getPropertyFromSide(s)) == FiberSideType.SELF_ATTACHMENT)
             .forEach(res::add);
     return res;
   }
@@ -77,7 +74,7 @@ public class OpticalFiberUtil {
    * @return the new {@link TileOpticalFiber}
    */
   private static TileOpticalFiber surrenderControllerStatus(World worldIn, TileOpticalFiberController oldController) {
-    worldIn.setBlockState(oldController.getPos(), worldIn.getBlockState(oldController.getPos()).withProperty(isController, false), 2|4|16);
+    worldIn.setBlockState(oldController.getPos(), worldIn.getBlockState(oldController.getPos()).withProperty(BlockOpticalFiber.isController, false), 2|4|16);
     TileOpticalFiber newTile = Util.getTileChecked(worldIn, oldController.getPos(), TileOpticalFiber.class);
     newTile.importConnections(oldController);
     return newTile;
@@ -90,7 +87,7 @@ public class OpticalFiberUtil {
    * @return the new {@link TileOpticalFiberController}.
    */
   private static TileOpticalFiberController becomeController(World worldIn, TileOpticalFiber oldFiber) {
-    worldIn.setBlockState(oldFiber.getPos(), worldIn.getBlockState(oldFiber.getPos()).withProperty(isController, true), 2|4|16);
+    worldIn.setBlockState(oldFiber.getPos(), worldIn.getBlockState(oldFiber.getPos()).withProperty(BlockOpticalFiber.isController, true), 2|4|16);
     TileOpticalFiberController newController = Util.getTileChecked(worldIn, oldFiber.getPos(), TileOpticalFiberController.class);
     newController.importConnections(oldFiber);
     assert newController.getNetworkBlocks().contains(oldFiber.getPos());
@@ -104,7 +101,7 @@ public class OpticalFiberUtil {
    * @param state the state of the newly placed fiber.
    */
   static void placeFiber(World worldIn, BlockPos pos, IBlockState state) {
-    if (state.getValue(isController)) {
+    if (state.getValue(BlockOpticalFiber.isController)) {
       // We created a new network containing only ourselves
       assert worldIn.getTileEntity(pos) instanceof TileOpticalFiberController;
     } else {
@@ -152,8 +149,8 @@ public class OpticalFiberUtil {
    */
   private static IBlockState attachFiberOnSide(World worldIn, BlockPos pos, IBlockState state, EnumFacing side) {
     assert BlockOpticalFiber.isFiberInPos(worldIn, pos.offset(side));
-    worldIn.setBlockState(pos.offset(side), worldIn.getBlockState(pos.offset(side)).withProperty(getPropertyFromSide(side.getOpposite()), FiberSideType.SELF_ATTACHMENT));
-    return state.withProperty(getPropertyFromSide(side), FiberSideType.SELF_ATTACHMENT);
+    worldIn.setBlockState(pos.offset(side), worldIn.getBlockState(pos.offset(side)).withProperty(BlockOpticalFiber.getPropertyFromSide(side.getOpposite()), FiberSideType.SELF_ATTACHMENT));
+    return state.withProperty(BlockOpticalFiber.getPropertyFromSide(side), FiberSideType.SELF_ATTACHMENT);
 
   }
 
@@ -253,10 +250,14 @@ public class OpticalFiberUtil {
   /**
    * Splits a connection between two fibers.
    * @param worldIn the world.
-   * @param pos the position of the block to separated.
+   * @param pos the position of the block to separate.
    * @param side the side to separate.
    */
-  public static void splitConnection(World worldIn, BlockPos pos, EnumFacing side) {
+  static void splitConnection(World worldIn, BlockPos pos, EnumFacing side) {
+    assert BlockOpticalFiber.isFiberInPos(worldIn, pos) && BlockOpticalFiber.isFiberInPos(worldIn, pos.offset(side));
+    assert worldIn.getBlockState(pos).getValue(BlockOpticalFiber.getPropertyFromSide(side)) == FiberSideType.SELF_ATTACHMENT;
+    assert worldIn.getBlockState(pos.offset(side)).getValue(BlockOpticalFiber.getPropertyFromSide(side.getOpposite())) == FiberSideType.SELF_ATTACHMENT;
+
     BlockPos otherPos = pos.offset(side);
     BlockOpticalFiber.setSideType(worldIn, pos, side, FiberSideType.NONE);
     BlockOpticalFiber.setSideType(worldIn, otherPos, side.getOpposite(), FiberSideType.NONE);
@@ -287,6 +288,31 @@ public class OpticalFiberUtil {
       assert otherNetwork.contains(newControllerPos);
       TileOpticalFiberController newController = becomeController(worldIn, Util.getTileChecked(worldIn, newControllerPos, TileOpticalFiber.class));
       originalController.migrateFibersTo(newController, otherNetwork);
+    }
+  }
+
+  /**
+   * Undoes {@link OpticalFiberUtil#splitConnection(World, BlockPos, EnumFacing)}.
+   * @param worldIn the world.
+   * @param pos the position of the block to join.
+   * @param side the side to join.
+   */
+  static void joinConnection(World worldIn, BlockPos pos, EnumFacing side) {
+    assert BlockOpticalFiber.isFiberInPos(worldIn, pos) && BlockOpticalFiber.isFiberInPos(worldIn, pos.offset(side));
+    assert worldIn.getBlockState(pos).getValue(BlockOpticalFiber.getPropertyFromSide(side)) == FiberSideType.NONE;
+    assert worldIn.getBlockState(pos.offset(side)).getValue(BlockOpticalFiber.getPropertyFromSide(side.getOpposite())) == FiberSideType.NONE;
+
+    BlockOpticalFiber.setSideType(worldIn, pos, side, FiberSideType.SELF_ATTACHMENT);
+    BlockOpticalFiber.setSideType(worldIn, pos.offset(side), side.getOpposite(), FiberSideType.SELF_ATTACHMENT);
+
+    // Fix the network information
+    TileOpticalFiberBase posTile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
+    TileOpticalFiberBase otherTile = Util.getTileChecked(worldIn, pos.offset(side), TileOpticalFiberBase.class);
+
+    if (!posTile.getControllerPos().equals(otherTile.getControllerPos())) {
+      TileOpticalFiberController otherController = otherTile.getController();
+      surrenderControllerStatus(worldIn, otherController);
+      posTile.getController().cannibalize(otherController);
     }
   }
 }
