@@ -323,7 +323,10 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Override
   public IBlockState getStateForPlacement(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ, int meta, @Nonnull EntityLivingBase placer, EnumHand hand) {
     IBlockState superState = super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer, hand);
-    boolean hasAdjacent = Arrays.stream(EnumFacing.VALUES).anyMatch(s -> isFiberInPos(world, pos.offset(s)));
+    // Find see if any fibers without connections facing us
+    boolean hasAdjacent = Arrays.stream(EnumFacing.VALUES)
+            .anyMatch(s -> isFiberInPos(world, pos.offset(s))
+                    && world.getBlockState(pos.offset(s)).getValue(getPropertyFromSide(s.getOpposite())) != FiberSideType.CONNECTION);
     // If there are no connected fibers, this is placed as a controller
     return superState.withProperty(isController, !hasAdjacent);
   }
