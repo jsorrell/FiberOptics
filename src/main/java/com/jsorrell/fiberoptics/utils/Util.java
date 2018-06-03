@@ -28,4 +28,18 @@ public class Util {
     }
     return clazz.cast(testTile);
   }
+
+  /**
+   * Returns the value of the first argument raised to the power of the second argument.
+   * @param a the base.
+   * @param b the power.
+   * @return the value of the first argument raised to the power of the second argument.
+   */
+  public static long iPow(long a, int b)
+  {
+    if (b == 0) return 1;
+    if (b == 1) return a;
+    if (b % 2 == 0) return iPow(a*a, b/2);
+    return a * iPow (a*a, b/2);
+  }
 }

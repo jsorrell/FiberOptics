@@ -26,8 +26,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.swing.text.html.Option;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -107,9 +107,8 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Override
   @Deprecated
   public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-    final IBlockState actualState = state.getActualState(source, pos);
     return Arrays.stream(EnumFacing.VALUES)
-            .map(s -> getBoundingBoxForPart(actualState, FiberPart.fromSide(s)))
+            .map(s -> getBoundingBoxForPart(state, FiberPart.fromSide(s)))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .reduce(getBoundingBoxForCenter(), AxisAlignedBB::union);
@@ -118,7 +117,6 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Nullable
   @Override
   public RayTraceResult collisionRayTrace(IBlockState blockState, World worldIn, BlockPos pos, Vec3d start, Vec3d end) {
-    final IBlockState actualState = blockState.getActualState(worldIn, pos);
     Vec3d relStart = start.subtract(pos.getX(), pos.getY(), pos.getZ());
     Vec3d relEnd = end.subtract(pos.getX(), pos.getY(), pos.getZ());
 
@@ -127,7 +125,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     Vec3d hitPos = null;
 
     for (FiberPart part : FiberPart.values()) {
-      Optional<AxisAlignedBB> bbOpt = getBoundingBoxForPart(actualState, part);
+      Optional<AxisAlignedBB> bbOpt = getBoundingBoxForPart(blockState, part);
       if (!bbOpt.isPresent()) continue;
       AxisAlignedBB bb = bbOpt.get();
       RayTraceResult collision = bb.calculateIntercept(relStart, relEnd);
@@ -204,9 +202,9 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
 
   @Override
   public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean isActualState) {
-    final IBlockState actualState = getActualState(state, worldIn, pos);
+    BlockOpticalFiber.addCollisionBoxToList(pos, entityBox, collidingBoxes, getBoundingBoxForCenter());
     Arrays.stream(EnumFacing.VALUES)
-            .map(s -> getBoundingBoxForPart(actualState, FiberPart.fromSide(s)))
+            .map(s -> getBoundingBoxForPart(state, FiberPart.fromSide(s)))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(bb -> BlockOpticalFiber.addCollisionBoxToList(pos, entityBox, collidingBoxes, bb));
@@ -219,13 +217,13 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   }
 
   @SideOnly(Side.CLIENT)
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "WeakerAccess"})
   @SubscribeEvent (priority = EventPriority.LOW)
   public void drawSelectedBoundingBox(DrawBlockHighlightEvent e) {
     if(e.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
       World world = e.getPlayer().world;
       BlockPos pos = e.getTarget().getBlockPos();
-      IBlockState state = world.getBlockState(pos).getActualState(world, pos);
+      IBlockState state = world.getBlockState(pos);
       Block block = state.getBlock();
 
       if (block instanceof BlockOpticalFiber) {
@@ -246,18 +244,6 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     return new BlockStateContainer(this, down, up, north, south, west, east, isController);
   }
 
-  @Override
-  @Nonnull
-  public IBlockState getActualState(@Nonnull IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-    for (EnumFacing side : EnumFacing.VALUES) {
-      if (isFiberInPos(worldIn, pos.offset(side))) {
-        PropertyFiberSide property = getPropertyFromSide(side);
-        state = state.withProperty(property, FiberSideType.SELF_ATTACHMENT);
-      }
-    }
-    return state;
-  }
-
   /**
    * Test if the block at pos is a {@link BlockOpticalFiber}.
    * @param worldIn the world.
@@ -268,21 +254,42 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     return worldIn.getBlockState(pos).getBlock() instanceof BlockOpticalFiber;
   }
 
+  private Set<EnumFacing> findAdjacentFibers(IBlockAccess worldIn, BlockPos pos) {
+    return Arrays.stream(EnumFacing.VALUES)
+            .filter(s -> isFiberInPos(worldIn, pos.offset(s)))
+            .filter(s -> {
+              IBlockState state = worldIn.getBlockState(pos.offset(s));
+              return state.getBlock() instanceof BlockOpticalFiber && state.getValue(getPropertyFromSide(s.getOpposite())) != FiberSideType.CONNECTION;
+            })
+            .collect(Collectors.toSet());
+  }
+
   /**
-   * Get all fibers directly connected to pos.
-   * @param worldIn the world.
-   * @param pos position to find fibers connected to.
-   * @return The set of all positions of {@link BlockOpticalFiber}s directly connected to {@code pos} (not including {@code pos}).
+   * Get the sides directly connected to another fiber.
+   * @param state the state of the block to check.
+   * @return the set of all sides of fibers directly connected to the block.
    */
-  Set<BlockPos> getConnectedFibers(IBlockAccess worldIn, BlockPos pos) {
-    Set<BlockPos> res = new HashSet<>(6);
-    for (EnumFacing direction : EnumFacing.VALUES) {
-      BlockPos testPos = pos.offset(direction);
-      if (worldIn.getBlockState(testPos).getBlock() instanceof BlockOpticalFiber) {
-        res.add(testPos);
-      }
-    }
+  private static Set<EnumFacing> getConnectedSides(IBlockState state) {
+    assert state.getBlock() instanceof BlockOpticalFiber;
+    Set<EnumFacing> res = new HashSet<>(6);
+    Arrays.stream(EnumFacing.VALUES)
+            .filter(s -> state.getValue(getPropertyFromSide(s)) == FiberSideType.SELF_ATTACHMENT)
+            .forEach(res::add);
     return res;
+  }
+
+  /**
+   * Get the positions of all fibers directly connected to the fiber at {@code pos}.
+   * @param pos the pos to check.
+   * @param state the state of the block at pos.
+   * @return the set positions of all fibers directly conncted to the fiber at {@code pos}.
+   */
+  private static Set<BlockPos> getConnectedFibers(BlockPos pos, IBlockState state) {
+    assert state.getBlock() instanceof BlockOpticalFiber;
+    Set<EnumFacing> connectedSides = getConnectedSides(state);
+    return connectedSides.stream()
+            .map(pos::offset)
+            .collect(Collectors.toSet());
   }
 
   /**
@@ -304,7 +311,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    * @param oldFiber the fiber to promote.
    * @return the new {@link TileOpticalFiberController}.
    */
-  private TileOpticalFiberController becomeController(World worldIn, TileOpticalFiber oldFiber) {
+  private static TileOpticalFiberController becomeController(World worldIn, TileOpticalFiber oldFiber) {
     worldIn.setBlockState(oldFiber.getPos(), worldIn.getBlockState(oldFiber.getPos()).withProperty(isController, true), 2|4|16);
     TileOpticalFiberController newController = Util.getTileChecked(worldIn, oldFiber.getPos(), TileOpticalFiberController.class);
     newController.importConnections(oldFiber);
@@ -316,8 +323,9 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Override
   public IBlockState getStateForPlacement(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ, int meta, @Nonnull EntityLivingBase placer, EnumHand hand) {
     IBlockState superState = super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer, hand);
+    boolean hasAdjacent = Arrays.stream(EnumFacing.VALUES).anyMatch(s -> isFiberInPos(world, pos.offset(s)));
     // If there are no connected fibers, this is placed as a controller
-    return superState.withProperty(isController, getConnectedFibers(world, pos).isEmpty());
+    return superState.withProperty(isController, !hasAdjacent);
   }
 
   @Nullable
@@ -326,12 +334,30 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     if (world.isRemote) {
       return new TileOpticalFiberClient();
     }
+
     if (state.getValue(isController)) {
       return new TileOpticalFiberController();
     } else {
       // Controller position updated by onBlockPlaced
       return new TileOpticalFiber();
     }
+  }
+
+  /**
+   * Sets the block state of the adjacent fiber to attach to this fiber.
+   * Returns the new block state for this fiber.
+   * DOES NOT CHANGE THE STATE OF THIS FIBER IN THE WORLD.
+   * @param worldIn the world.
+   * @param pos the position of the fiber in the world.
+   * @param state the current state of the fiber.
+   * @param side the side of the adjacent fiber to attach to.
+   * @return the state the fiber after attaching to the adjacent fiber.
+   */
+  private IBlockState attachFiberOnSide(World worldIn, BlockPos pos, IBlockState state, EnumFacing side) {
+    assert isFiberInPos(worldIn, pos.offset(side));
+    worldIn.setBlockState(pos.offset(side), worldIn.getBlockState(pos.offset(side)).withProperty(getPropertyFromSide(side.getOpposite()), FiberSideType.SELF_ATTACHMENT));
+    return state.withProperty(getPropertyFromSide(side), FiberSideType.SELF_ATTACHMENT);
+
   }
 
   @Override
@@ -345,29 +371,33 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
       // We created a new network containing only ourselves
       assert worldIn.getTileEntity(pos) instanceof TileOpticalFiberController;
     } else {
+      // Set the block state to correctly reflect the self attachments
+      for (EnumFacing side : findAdjacentFibers(worldIn, pos)) {
+        state = attachFiberOnSide(worldIn, pos, state, side);
+      }
+      setRenderBlockState(worldIn, pos, state);
+
+      // Fix the network information
       TileOpticalFiber tile = Util.getTileChecked(worldIn, pos, TileOpticalFiber.class);
 
       // Find which controllers we joined
-      Stack<TileOpticalFiberController> connectedControllers = new Stack<>();
-      for (EnumFacing direction : EnumFacing.VALUES) {
-        if (isFiberInPos(worldIn, pos.offset(direction))) {
-          TileOpticalFiberController con = Util.getTileChecked(worldIn, pos.offset(direction), TileOpticalFiberController.class).getController();
-          if (!connectedControllers.contains(con)) connectedControllers.push(con);
-        }
+      Stack<BlockPos> connectedControllers = new Stack<>();
+      Set<BlockPos> attachedFibers = getConnectedFibers(pos, state);
+      for (BlockPos pos1 : attachedFibers) {
+        BlockPos conPos = Util.getTileChecked(worldIn, pos1, TileOpticalFiberBase.class).getControllerPos();
+        if (!connectedControllers.contains(conPos)) connectedControllers.push(conPos);
       }
       assert (!connectedControllers.empty());
 
       // Connect to existing network
       // Choose first connected controller to consolidate into
-      TileOpticalFiberController primaryController = connectedControllers.pop();
+      TileOpticalFiberController primaryController = Util.getTileChecked(worldIn, connectedControllers.pop(), TileOpticalFiberController.class);
       primaryController.addFiber(tile);
 
       // If connecting multiple networks, consolidate them
       while (!connectedControllers.empty()) {
-        TileOpticalFiberController secondaryController = connectedControllers.pop();
-        assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
+        TileOpticalFiberController secondaryController = Util.getTileChecked(worldIn, connectedControllers.pop(), TileOpticalFiberController.class);
         surrenderControllerStatus(worldIn, secondaryController);
-        assert secondaryController.getNetworkBlocks().contains(secondaryController.getPos());
         primaryController.cannibalize(secondaryController);
       }
     }
@@ -379,23 +409,34 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    * @param destroyedBlockPos the destroyed block position.
    * @return a maximal list of positions of unnetworked fibers.
    */
-  private List<Set<BlockPos>> getDistinctNetworks(IBlockAccess worldIn, BlockPos destroyedBlockPos) {
+  private List<Set<BlockPos>> getDistinctNetworks(IBlockAccess worldIn, BlockPos destroyedBlockPos, IBlockState destroyedBlockState) {
     List<Set<BlockPos>> distinctNetworks = new ArrayList<>();
-    Set<BlockPos> startingFibers = getConnectedFibers(worldIn, destroyedBlockPos);
+    Set<BlockPos> startingFibers = getConnectedFibers(destroyedBlockPos, destroyedBlockState);
     while (!startingFibers.isEmpty()) {
-      Set<BlockPos> networkedFibers = new HashSet<>();
-      getDistinctNetworksHelper(worldIn, networkedFibers, startingFibers.iterator().next());
+      Set<BlockPos> networkedFibers = getConnectedBlocks(worldIn, startingFibers.iterator().next());
       startingFibers.removeAll(networkedFibers);
       distinctNetworks.add(networkedFibers);
     }
     return distinctNetworks;
   }
 
-  private void getDistinctNetworksHelper(IBlockAccess worldIn, Set<BlockPos> networkedFibers, BlockPos fiber) {
+  /**
+   * Finds every connected block in the network.
+   * @param world the world.
+   * @param startingPos the position to search from and find blocks connected to.
+   * @return the set of positions of all connected blocks in the network.
+   */
+  private static Set<BlockPos> getConnectedBlocks(IBlockAccess world, BlockPos startingPos) {
+    Set<BlockPos> networkedFibers = new HashSet<>();
+    getConnectedBlocksHelper(world, startingPos, networkedFibers);
+    return networkedFibers;
+  }
+
+  private static void getConnectedBlocksHelper(IBlockAccess worldIn, BlockPos fiber, Set<BlockPos> networkedFibers) {
     networkedFibers.add(fiber);
-    Set<BlockPos> connectedFibers = getConnectedFibers(worldIn, fiber);
+    Set<BlockPos> connectedFibers = getConnectedFibers(fiber, worldIn.getBlockState(fiber));
     connectedFibers.removeAll(networkedFibers);
-    connectedFibers.forEach(connectedFiber -> getDistinctNetworksHelper(worldIn, networkedFibers, connectedFiber));
+    connectedFibers.forEach(connectedFiber -> getConnectedBlocksHelper(worldIn, connectedFiber, networkedFibers));
   }
 
   /**
@@ -404,7 +445,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    * @param relative the position to measure relative to.
    * @return the farthest position from {@code relative}.
    */
-  private BlockPos getFarthest(Set<BlockPos> posSet, BlockPos relative) {
+  private static BlockPos getFarthest(Set<BlockPos> posSet, BlockPos relative) {
     BlockPos farthestPos = relative;
     Double farthestDistance = 0D;
 
@@ -425,24 +466,15 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    * @param destroyedBlockPos the position of the destroyed optical fiber.
    * @param originalController the controller that served the destroyed block.
    */
-  private void formNewNetworks(World worldIn, BlockPos destroyedBlockPos, TileOpticalFiberController originalController) {
-    List<Set<BlockPos>> distinctNetworks = getDistinctNetworks(worldIn, destroyedBlockPos);
+  private void formNewNetworks(World worldIn, BlockPos destroyedBlockPos, IBlockState destroyedBlockState, TileOpticalFiberController originalController) {
+    List<Set<BlockPos>> distinctNetworks = getDistinctNetworks(worldIn, destroyedBlockPos, destroyedBlockState);
     boolean blockDestroyedWasController = originalController.getPos().equals(destroyedBlockPos);
 
     for (Set<BlockPos> distinctNetwork : distinctNetworks) {
       if (blockDestroyedWasController || !distinctNetwork.contains(originalController.getPos())) {
         BlockPos farthest = getFarthest(distinctNetwork, destroyedBlockPos);
         TileOpticalFiberController newController = becomeController(worldIn, Util.getTileChecked(worldIn, farthest, TileOpticalFiber.class));
-        for (BlockPos pos : distinctNetwork) {
-          // Move to the new network
-          TileOpticalFiberBase tile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
-          boolean success = originalController.removeFiber(tile);
-          assert success;
-          if (!pos.equals(newController.getPos())) {
-            newController.addFiber((TileOpticalFiber) tile);
-          }
-        }
-        assert newController.getNetworkBlocks().equals(distinctNetwork);
+        originalController.migrateFibersTo(newController, distinctNetwork);
       }
     }
     assert blockDestroyedWasController == originalController.getNetworkBlocks().isEmpty();
@@ -451,7 +483,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Override
   public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
     TileOpticalFiberBase tile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
-    breakFiber(worldIn, pos, tile);
+    breakFiber(worldIn, pos, state, tile);
     super.breakBlock(worldIn, pos, state);
   }
 
@@ -461,11 +493,66 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    * @param pos the pos of the fiber.
    * @param tile the tile of the broken fiber.
    */
-  private void breakFiber(World worldIn, BlockPos pos, TileOpticalFiberBase tile) {
-    if (!getConnectedFibers(worldIn, pos).isEmpty()) {
+  private void breakFiber(World worldIn, BlockPos pos, IBlockState state, TileOpticalFiberBase tile) {
+    Set<EnumFacing> connectedSides = getConnectedSides(state);
+    if (!connectedSides.isEmpty()) {
+      connectedSides.forEach(s -> setSideType(worldIn, pos.offset(s), s.getOpposite(), FiberSideType.NONE));
       TileOpticalFiberController controller = tile.getController();
       controller.removeFiber(tile);
-      formNewNetworks(worldIn, pos, controller);
+      formNewNetworks(worldIn, pos, state, controller);
+    }
+
+    worldIn.removeTileEntity(pos);
+  }
+
+  /**
+   * Splits a connection between two fibers.
+   * @param worldIn the world.
+   * @param pos the position of the block to separated.
+   * @param side the side to separate.
+   */
+  public static void splitConnection(World worldIn, BlockPos pos, EnumFacing side) {
+    BlockPos otherPos = pos.offset(side);
+    setSideType(worldIn, pos, side, FiberSideType.NONE);
+    setSideType(worldIn, otherPos, side.getOpposite(), FiberSideType.NONE);
+
+    Set<BlockPos> posNetwork = getConnectedBlocks(worldIn, pos);
+    if (!posNetwork.contains(otherPos)) {
+      // We separated two networks
+      TileOpticalFiberBase posTile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
+
+      Set<BlockPos> controllerNetwork;
+      Set<BlockPos> otherNetwork;
+      if (posNetwork.contains(posTile.getControllerPos())) {
+        controllerNetwork = posNetwork;
+        otherNetwork = posTile.getNetworkBlocks();
+        otherNetwork.removeAll(controllerNetwork);
+      } else {
+        otherNetwork = posNetwork;
+        controllerNetwork = posTile.getNetworkBlocks();
+        controllerNetwork.removeAll(otherNetwork);
+      }
+
+      assert controllerNetwork.contains(posTile.getControllerPos());
+      assert Collections.disjoint(controllerNetwork, otherNetwork);
+
+      TileOpticalFiberController originalController = posTile.getController();
+
+      BlockPos newControllerPos = getFarthest(otherNetwork, pos);
+      assert otherNetwork.contains(newControllerPos);
+      TileOpticalFiberController newController = becomeController(worldIn, Util.getTileChecked(worldIn, newControllerPos, TileOpticalFiber.class));
+      originalController.migrateFibersTo(newController, otherNetwork);
+    }
+  }
+
+  static void setSideType(World world, BlockPos pos, EnumFacing side, FiberSideType type) {
+    IBlockState state = world.getBlockState(pos);
+    state = state.withProperty(getPropertyFromSide(side), type);
+    setRenderBlockState(world, pos, state);
+  }
+  static void setRenderBlockState(World world, BlockPos pos, IBlockState state) {
+    if (!world.getBlockState(pos).equals(state)) {
+      world.setBlockState(pos, state, 2 | 16);
     }
   }
 }

@@ -3,8 +3,8 @@ package com.jsorrell.fiberoptics.message.optical_fiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.FiberSideType;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberClient;
 import com.jsorrell.fiberoptics.message.MessagePos;
+import com.jsorrell.fiberoptics.utils.Util;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -18,50 +18,50 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import javax.annotation.Nonnull;
-import java.util.BitSet;
+import java.util.Arrays;
+import java.util.List;
 
 public class PacketClientSync extends MessagePos {
-  private final BitSet connectedSides = new BitSet(6);
+  private final List<FiberSideType> sides = Arrays.asList(new FiberSideType[6]);
 
-  public PacketClientSync() {
-  }
+  public PacketClientSync() {}
 
   public PacketClientSync(BlockPos pos) {
     super(pos);
   }
 
-  private byte bitsToByte() {
-    byte out = 0;
+  private int encodeSides() {
+    assert Util.iPow(FiberSideType.values().length, 6) <= Integer.MAX_VALUE;
+    int out = 0;
     for (int i = 0; i < 6; ++i) {
-      if (this.connectedSides.get(i)) {
-        out |= 0x1 << i;
-      }
+      out += sides.get(i).getIndex() * Util.iPow(FiberSideType.values().length, i);
     }
     return out;
   }
 
-  private void byteToBits(byte in) {
-    for (int i = 0; i < 8; ++i) {
-      if ((in & (0x1 << i)) != 0) {
-        this.connectedSides.set(i);
-      }
+  private void decodeSides(int in) {
+    for (int i = 5; i >= 0; --i) {
+      int pow = (int) Util.iPow(FiberSideType.values().length, i);
+      int val = in / pow;
+      sides.set(i, FiberSideType.fromIndex(val));
+      in -= val * pow;
     }
   }
 
   @Override
   public void toBytes(ByteBuf buf) {
-    super.toBytes(buf );
-    buf.writeByte(bitsToByte());
+    super.toBytes(buf);
+    buf.writeInt(encodeSides());
   }
 
   @Override
   public void fromBytes(ByteBuf buf) {
     super.fromBytes(buf);
-    byteToBits(buf.readByte());
+    decodeSides(buf.readInt());
   }
 
-  public void setConnectedSide(@Nonnull EnumFacing side) {
-    this.connectedSides.set(side.getIndex());
+  public void setSide(@Nonnull EnumFacing side, FiberSideType type) {
+    this.sides.set(side.getIndex(), type);
   }
 
 
@@ -72,10 +72,8 @@ public class PacketClientSync extends MessagePos {
       World world = Minecraft.getMinecraft().world;
       if (world.isBlockLoaded(message.pos) && BlockOpticalFiber.isFiberInPos(world, message.pos)) {
         IBlockState state = world.getBlockState(message.pos);
-        for (EnumFacing side : EnumFacing.VALUES) {
-          if (message.connectedSides.get(side.getIndex())) {
-            state = state.withProperty(BlockOpticalFiber.getPropertyFromSide(side), FiberSideType.CONNECTION);
-          }
+        for (int i = 0; i < 6; ++i) {
+          state = state.withProperty(BlockOpticalFiber.getPropertyFromSide(EnumFacing.getFront(i)), message.sides.get(i));
         }
         world.setBlockState(message.pos, state);
       }
@@ -107,12 +105,10 @@ public class PacketClientSync extends MessagePos {
           return null;
         }
 
-        TileOpticalFiberBase tile = (TileOpticalFiberBase) testTile;
-
         PacketClientSync response = new PacketClientSync(message.pos);
 
         for (EnumFacing side : EnumFacing.VALUES) {
-          if (tile.hasConnectionOnSide(side)) response.setConnectedSide(side);
+          response.setSide(side, world.getBlockState(message.pos).getValue(BlockOpticalFiber.getPropertyFromSide(side)));
         }
 
         return response;

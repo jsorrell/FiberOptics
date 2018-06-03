@@ -3,6 +3,7 @@ package com.jsorrell.fiberoptics.item;
 import com.jsorrell.fiberoptics.block.ModBlocks;
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.FiberPart;
+import com.jsorrell.fiberoptics.block.optical_fiber.FiberSideType;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
@@ -42,17 +43,22 @@ public class Terminator extends ItemBase {
             // If we hit the center part, the direction is the side
             side = facing;
           } else {
-            IBlockState state = worldIn.getBlockState(pos).getActualState(worldIn, pos);
+            IBlockState state = worldIn.getBlockState(pos);
             // If we hit a side, we use this side
             for (EnumFacing testSide : EnumFacing.VALUES) {
               Optional<AxisAlignedBB> boxOpt = BlockOpticalFiber.getBoundingBoxForPart(state, FiberPart.fromSide(testSide));
               if (boxOpt.isPresent() && boxOpt.get().contains(hitVec)) {
                 side = testSide;
+                if (state.getValue(BlockOpticalFiber.getPropertyFromSide(side)) == FiberSideType.SELF_ATTACHMENT) {
+                  BlockOpticalFiber.splitConnection(worldIn, pos, side);
+                  return EnumActionResult.SUCCESS;
+                }
                 break;
               }
             }
           }
           assert side != null;
+
           TileOpticalFiberBase tile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
           FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(pos, side, tile.getConnections(side)), (EntityPlayerMP) playerIn);
         }

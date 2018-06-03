@@ -35,12 +35,7 @@ public class PropertyFiberSide extends PropertyHelper<FiberSideType> {
 
   @Override
   public String getName(FiberSideType value) {
-    switch (value) {
-      case NONE: return "none";
-      case SELF_ATTACHMENT: return "self_attachment";
-      case CONNECTION: return "connection";
-    }
-    return "";
+    return value.getName();
   }
 
 }

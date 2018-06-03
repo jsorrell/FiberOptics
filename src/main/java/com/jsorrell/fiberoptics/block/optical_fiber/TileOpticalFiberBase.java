@@ -4,14 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
-import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -21,7 +18,6 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,6 +25,7 @@ import java.util.stream.Collectors;
 @ParametersAreNonnullByDefault
 public abstract class TileOpticalFiberBase extends TileEntity implements IConnectionContainer {
   private Set<OpticalFiberConnection> connections = null;
+  private final List<EnumFacing> selfAttachments = new ArrayList<>(6);
 
   /**
    * Gets the position of the controller linked to the fiber.
@@ -47,16 +44,6 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
    */
   abstract TileOpticalFiberController getController();
 
-  private void setConnectedSide(EnumFacing side) {
-    // Update blockstate and send to clients
-    IBlockState state = this.world.getBlockState(this.pos);
-    PropertyFiberSide property = BlockOpticalFiber.getPropertyFromSide(side);
-    if (state.getValue(property) != FiberSideType.CONNECTION) {
-      state = state.withProperty(property, FiberSideType.CONNECTION);
-      this.world.setBlockState(this.pos, state, 2);
-    }
-  }
-
   @Override
   public boolean addConnection(OpticalFiberConnection connection) {
     if (!isValidConnectionForNetwork(connection)) return false;
@@ -68,7 +55,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     connectionTile.connections.add(connection);
     connectionTile.markDirty();
 
-    this.setConnectedSide(connection.connectedSide);
+    BlockOpticalFiber.setSideType(this.world, this.pos, connection.connectedSide, FiberSideType.CONNECTION);
 
     return true;
   }
@@ -78,12 +65,6 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     if (this.getTileAtPos(connection.pos).connections.remove(connection)) {
       this.getController().fiberNetwork.removeConnection(connection);
       this.markDirty();
-
-      // Update blockstate and send to clients
-      if (BlockOpticalFiber.isFiberInPos(this.world, this.pos.offset(connection.connectedSide))) {
-        // TODO do we need this, should we allow this to happen
-        return true;
-      }
 
       for (OpticalFiberConnection connection1 : this.connections) {
         if (connection.connectedSide.equals(connection1.connectedSide)) {
@@ -186,6 +167,31 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
   }
 
   /**
+   * Migrates fibers from {@code this} to {@code newController}. This is used to split the network.
+   * @param newController the controller to migrate to.
+   * @param fibersToMigrate the positions of fibers to migrate.
+   */
+  void migrateFibersTo(TileOpticalFiberController newController, Set<BlockPos> fibersToMigrate) {
+    if (!this.getController().networkBlocks.containsAll(fibersToMigrate)) {
+      throw new AssertionError("Doesn't contain all fibers to migrate.");
+    }
+
+    if (fibersToMigrate.contains(this.getControllerPos())) {
+      throw new AssertionError("Contains this controller.");
+    }
+
+    for (BlockPos fiberPos : fibersToMigrate) {
+      // Move to the new network
+      TileOpticalFiberBase fiber = Util.getTileChecked(this.world, fiberPos, TileOpticalFiberBase.class);
+      boolean success = this.removeFiber(fiber);
+      assert success;
+      if (!fiberPos.equals(newController.getPos())) {
+        newController.addFiber((TileOpticalFiber) fiber);
+      }
+    }
+  }
+
+  /**
    * Checks if the connection is valid and able to be added to the network.
    * @param connection the connection.
    * @return {@code true} iff the connection is valid and able to be added to the network.
@@ -220,9 +226,19 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     return compound;
   }
 
+  private NBTTagCompound writeSelfAttachmentsToNBT(NBTTagCompound compound) {
+    NBTTagCompound sides = new NBTTagCompound();
+    for (EnumFacing side : EnumFacing.VALUES) {
+      sides.setBoolean(side.getName(), this.world.getBlockState(this.pos).getValue(BlockOpticalFiber.getPropertyFromSide(side)) == FiberSideType.SELF_ATTACHMENT);
+    }
+    compound.setTag("self_attachments", sides);
+    return compound;
+  }
+
   @Override
   public NBTTagCompound writeToNBT(NBTTagCompound compound) {
     this.writeConnectionsToNBT(compound);
+    this.writeSelfAttachmentsToNBT(compound);
     return super.writeToNBT(compound);
   }
 
@@ -248,5 +264,29 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
       OpticalFiberOutput output = new OpticalFiberOutput(outputs.getCompoundTagAt(i));
       this.connections.add(output);
     }
+
+    NBTTagCompound self_attachments = compound.getCompoundTag("self_attachments");
+    for (EnumFacing side : EnumFacing.VALUES) {
+      if (self_attachments.getBoolean(side.getName())) {
+        this.selfAttachments.add(side);
+      }
+    }
+  }
+
+  @Override
+  public void onLoad() {
+    IBlockState state = this.world.getBlockState(this.pos);
+    for (EnumFacing side : this.selfAttachments) {
+      state = state.withProperty(BlockOpticalFiber.getPropertyFromSide(side), FiberSideType.SELF_ATTACHMENT);
+    }
+
+    for (EnumFacing side : EnumFacing.VALUES) {
+      if (this.hasConnectionOnSide(side)) {
+        state = state.withProperty(BlockOpticalFiber.getPropertyFromSide(side), FiberSideType.CONNECTION);
+      }
+    }
+
+    world.setBlockState(this.pos, state, 0);
+    super.onLoad();
   }
 }
