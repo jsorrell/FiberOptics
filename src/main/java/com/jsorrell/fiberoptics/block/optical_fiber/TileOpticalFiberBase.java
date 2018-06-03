@@ -61,6 +61,27 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
   }
 
   @Override
+  public boolean replaceConnection(OpticalFiberConnection connection, OpticalFiberConnection connectionToReplace) {
+
+    if (connection.pos != connectionToReplace.pos || connection.connectedSide != connectionToReplace.connectedSide) {
+      return false;
+    }
+
+    if (!isValidConnectionForNetwork(connection)) return false;
+
+
+    TileOpticalFiberBase connectionTile = getTileAtPos(connection.pos);
+
+    if (!connectionTile.connections.remove(connectionToReplace)) return false;
+    connectionTile.connections.add(connection);
+    connectionTile.markDirty();
+    this.getController().fiberNetwork.removeConnection(connectionToReplace);
+    this.getController().fiberNetwork.addConnection(connection);
+    this.getController().markDirty();
+    return true;
+  }
+
+  @Override
   public boolean removeConnection(OpticalFiberConnection connection) {
     if (this.getTileAtPos(connection.pos).connections.remove(connection)) {
       this.getController().fiberNetwork.removeConnection(connection);

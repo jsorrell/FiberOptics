@@ -15,6 +15,14 @@ public interface IConnectionContainer {
   boolean addConnection(OpticalFiberConnection connection);
 
   /**
+   * Attempts to replace a connection with another in the network.
+   * @param connection
+   * @param connectionToReplace
+   * @return
+   */
+  boolean replaceConnection(OpticalFiberConnection connection, OpticalFiberConnection connectionToReplace);
+
+  /**
    * Attempts to remove a connection from the network.
    * @param connection the connection.
    * @return {@code true} iff the connection was in the network and successfully removed.

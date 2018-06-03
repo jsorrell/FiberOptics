@@ -1,14 +1,13 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberClient;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionFactory;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
-import com.jsorrell.fiberoptics.message.optical_fiber.OpticalFiberConnectionCreationRequest;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketCreateConnection;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -31,7 +30,8 @@ public class GuiConnectionCreator extends GuiConnectionBuilder {
   }
 
   @Override
-  public void actionPerformed(GuiButton button) {
+  public void actionPerformed(@Nullable GuiButton button) {
+    if (button == null) return;
     switch (button.id) {
       case CANCEL_BUTTON: {
         mc.displayGuiScreen(null);
@@ -43,7 +43,7 @@ public class GuiConnectionCreator extends GuiConnectionBuilder {
         OpticalFiberConnection connection;
         try {
           connection = connectionFactory.getConnection();
-          FiberOpticsPacketHandler.INSTANCE.sendToServer(new OpticalFiberConnectionCreationRequest(connection));
+          FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketCreateConnection(connection));
         } catch (OpticalFiberConnectionFactory.NonDefiningConnectionException e) {
           assert false;
         }
