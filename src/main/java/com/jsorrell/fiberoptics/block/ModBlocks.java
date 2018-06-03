@@ -11,14 +11,11 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 public class ModBlocks {
 
-  public static final BlockTest testBlock = new BlockTest();
-  public static final Item itemBlockTestBlock = testBlock.createItemBlock();
   public static final BlockOpticalFiber opticalFiber = new BlockOpticalFiber();
   public static final Item itemBlockOpticalFiber = opticalFiber.createItemBlock();
 
   public static void registerBlocks(IForgeRegistry<Block> registry) {
     registry.registerAll(
-            testBlock,
             opticalFiber
     );
 
@@ -29,13 +26,11 @@ public class ModBlocks {
 
   public static void registerItemBlocks(IForgeRegistry<Item> registry) {
     registry.registerAll(
-            itemBlockTestBlock,
             itemBlockOpticalFiber
     );
   }
 
   public static void registerItemBlockModels() {
-    testBlock.registerItemBlockModel(Item.getItemFromBlock(testBlock));
     opticalFiber.registerItemBlockModel(Item.getItemFromBlock(opticalFiber));
   }
 }
