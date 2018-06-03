@@ -8,7 +8,7 @@
       "transform": "forge:default-block"
     },
     "up": {
-      "true": {
+      "connection": {
         "submodel": {
           "connection_up": {
             "model": "fiberoptics:optical_fiber_connection",
@@ -16,10 +16,18 @@
           }
         }
       },
-      "false": {}
+      "self_attachment": {
+        "submodel": {
+          "self_attachment_up" : {
+            "model": "fiberoptics:optical_fiber_self_attachment",
+            "x": 270
+          }
+        }
+      },
+      "none": {}
     },
     "down": {
-      "true": {
+      "connection": {
         "submodel": {
           "connection_down": {
             "model": "fiberoptics:optical_fiber_connection",
@@ -27,20 +35,35 @@
           }
         }
       },
-      "false": {}
+      "self_attachment": {
+        "submodel": {
+          "self_attachment_down": {
+            "model": "fiberoptics:optical_fiber_self_attachment",
+            "x": 90
+          }
+        }
+      },
+      "none": {}
     },
     "north": {
-      "true": {
+      "connection": {
         "submodel": {
           "connection_north": {
             "model": "fiberoptics:optical_fiber_connection"
           }
         }
       },
-      "false": {}
+      "self_attachment": {
+        "submodel": {
+          "self_attachment_north": {
+            "model": "fiberoptics:optical_fiber_self_attachment"
+          }
+        }
+      },
+      "none": {}
     },
     "east": {
-      "true": {
+      "connection": {
         "submodel": {
           "connection_east": {
             "model": "fiberoptics:optical_fiber_connection",
@@ -48,10 +71,18 @@
           }
         }
       },
-      "false": {}
+      "self_attachment": {
+        "submodel": {
+          "self_attachment_east": {
+            "model": "fiberoptics:optical_fiber_self_attachment",
+            "y": 90
+          }
+        }
+      },
+      "none": {}
     },
     "south": {
-      "true": {
+      "connection": {
         "submodel": {
           "connection_south": {
             "model": "fiberoptics:optical_fiber_connection",
@@ -59,10 +90,18 @@
           }
         }
       },
-      "false": {}
+      "self_attachment": {
+        "submodel": {
+          "self_attachment_south": {
+            "model": "fiberoptics:optical_fiber_self_attachment",
+            "y": 180
+          }
+        }
+      },
+      "none": {}
     },
     "west": {
-      "true": {
+      "connection": {
         "submodel": {
           "connection_west": {
             "model": "fiberoptics:optical_fiber_connection",
@@ -70,7 +109,15 @@
           }
         }
       },
-      "false": {}
+      "self_attachment": {
+        "submodel": {
+          "self_attachment_west": {
+            "model": "fiberoptics:optical_fiber_self_attachment",
+            "y": 270
+          }
+        }
+      },
+      "none": {}
     },
     "controller": {
       "true": {

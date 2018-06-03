@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.message.optical_fiber;
 
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
+import com.jsorrell.fiberoptics.block.optical_fiber.FiberSideType;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberClient;
 import com.jsorrell.fiberoptics.message.MessagePos;
@@ -72,7 +73,9 @@ public class PacketClientSync extends MessagePos {
       if (world.isBlockLoaded(message.pos) && BlockOpticalFiber.isFiberInPos(world, message.pos)) {
         IBlockState state = world.getBlockState(message.pos);
         for (EnumFacing side : EnumFacing.VALUES) {
-          state = state.withProperty(BlockOpticalFiber.getPropertyFromSide(side), message.connectedSides.get(side.getIndex()));
+          if (message.connectedSides.get(side.getIndex())) {
+            state = state.withProperty(BlockOpticalFiber.getPropertyFromSide(side), FiberSideType.CONNECTION);
+          }
         }
         world.setBlockState(message.pos, state);
       }

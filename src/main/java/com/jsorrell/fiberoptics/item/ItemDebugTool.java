@@ -47,9 +47,6 @@ public class ItemDebugTool extends ItemBase {
         } else {
           TileOpticalFiber tile = (TileOpticalFiber) testTile;
           player.sendStatusMessage(new TextComponentString(tile.serializeNBT().toString()), false);
-          if (tile.getControllerPos() == null) {
-            player.sendStatusMessage(new TextComponentString("§4No controller stored at " + pos + "§r"), false);
-          }
         }
       }
     }

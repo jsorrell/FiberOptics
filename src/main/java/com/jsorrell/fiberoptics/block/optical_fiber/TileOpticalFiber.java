@@ -1,5 +1,6 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
+import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -33,7 +34,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
       throw new NullPointerException("Controller stored in fiber at " + this.pos + " is null.");
     }
     if (this.controller == null) {
-      this.controller = TileOpticalFiberController.getTileEntity(this.world, this.controllerPos);
+      this.controller = Util.getTileChecked(this.world, this.controllerPos, TileOpticalFiberController.class);
     }
     return this.controller;
   }
@@ -45,7 +46,7 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
   void setControllerPos(BlockPos pos) {
     Objects.requireNonNull(pos, "Setting controller to null");
     this.controllerPos = pos.toImmutable();
-    this.controller = TileOpticalFiberController.getTileEntity(this.world, pos);
+    this.controller = Util.getTileChecked(this.world, pos, TileOpticalFiberController.class);
     this.markDirty();
   }
 
@@ -72,21 +73,5 @@ public class TileOpticalFiber extends TileOpticalFiberBase {
       int controllerZ = controllerPos.getInteger("z");
       this.controllerPos = new BlockPos(controllerX, controllerY, controllerZ).toImmutable();
     }
-  }
-
-  /**
-   * Gets the tile entity of type {@link TileOpticalFiber} from the world.
-   * Only call this when sure that the tile exists and is of this type.
-   * @param world the world.
-   * @param pos the position of the tile.
-   * @return the tile entity of type {@link TileOpticalFiber}.
-   */
-  public static TileOpticalFiber getTileEntity(IBlockAccess world, BlockPos pos) {
-    TileEntity testTile = world.getTileEntity(pos);
-    Objects.requireNonNull(testTile, "Tile Entity at " + pos + " does not exist");
-    if (!(testTile instanceof TileOpticalFiber)) {
-      throw new ClassCastException("Tile at " + pos + "  is not instance of TileOpticalFiber");
-    }
-    return (TileOpticalFiber) testTile;
   }
 }

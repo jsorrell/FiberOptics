@@ -1,32 +1,21 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
-import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.block.BlockTileEntityBase;
-import com.jsorrell.fiberoptics.item.ModItems;
-import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
-import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
-import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenSideChooser;
+import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -37,18 +26,19 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.swing.text.html.Option;
 import java.util.*;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class BlockOpticalFiber extends BlockTileEntityBase {
 
-  protected static final PropertyBool upConnected = PropertyBool.create("up");
-  protected static final PropertyBool downConnected = PropertyBool.create("down");
-  protected static final PropertyBool northConnected = PropertyBool.create("north");
-  protected static final PropertyBool southConnected = PropertyBool.create("south");
-  protected static final PropertyBool eastConnected = PropertyBool.create("east");
-  protected static final PropertyBool westConnected = PropertyBool.create("west");
+  protected static final PropertyFiberSide down = PropertyFiberSide.create("down");
+  protected static final PropertyFiberSide up = PropertyFiberSide.create("up");
+  protected static final PropertyFiberSide north = PropertyFiberSide.create("north");
+  protected static final PropertyFiberSide south = PropertyFiberSide.create("south");
+  protected static final PropertyFiberSide west = PropertyFiberSide.create("west");
+  protected static final PropertyFiberSide east = PropertyFiberSide.create("east");
   protected static final PropertyBool isController = PropertyBool.create("controller");
 
   /**
@@ -57,14 +47,14 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    */
   private AxisAlignedBB selectedBoundingBox = null;
 
-  public static PropertyBool getPropertyFromSide(EnumFacing side) {
+  public static PropertyFiberSide getPropertyFromSide(EnumFacing side) {
     switch (side) {
-      case UP: return upConnected;
-      case DOWN: return downConnected;
-      case NORTH: return northConnected;
-      case SOUTH: return southConnected;
-      case EAST: return eastConnected;
-      case WEST: return westConnected;
+      case DOWN: return down;
+      case UP: return up;
+      case NORTH: return north;
+      case SOUTH: return south;
+      case WEST: return west;
+      case EAST: return east;
     }
     throw new AssertionError("Should never get here.");
   }
@@ -77,12 +67,12 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     setLightOpacity(0);
 
     IBlockState defaultState = this.blockState.getBaseState()
-            .withProperty(upConnected, false)
-            .withProperty(downConnected, false)
-            .withProperty(northConnected, false)
-            .withProperty(southConnected, false)
-            .withProperty(eastConnected, false)
-            .withProperty(westConnected, false)
+            .withProperty(down, FiberSideType.NONE)
+            .withProperty(up, FiberSideType.NONE)
+            .withProperty(north, FiberSideType.NONE)
+            .withProperty(south, FiberSideType.NONE)
+            .withProperty(west, FiberSideType.NONE)
+            .withProperty(east, FiberSideType.NONE)
             .withProperty(isController, false);
     setDefaultState(defaultState);
     MinecraftForge.EVENT_BUS.register(this);
@@ -117,45 +107,34 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   @Override
   @Deprecated
   public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-    AxisAlignedBB bb = getBoundingBoxForConnection(null);
-    for (EnumFacing side : getSides(state)) {
-      bb = bb.union(getBoundingBoxForConnection(side));
-    }
-    return bb;
-  }
-
-  @Nullable
-  @Override
-  public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-    return super.getCollisionBoundingBox(blockState, worldIn, pos);
+    final IBlockState actualState = state.getActualState(source, pos);
+    return Arrays.stream(EnumFacing.VALUES)
+            .map(s -> getBoundingBoxForPart(actualState, FiberPart.fromSide(s)))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .reduce(getBoundingBoxForCenter(), AxisAlignedBB::union);
   }
 
   @Nullable
   @Override
   public RayTraceResult collisionRayTrace(IBlockState blockState, World worldIn, BlockPos pos, Vec3d start, Vec3d end) {
+    final IBlockState actualState = blockState.getActualState(worldIn, pos);
     Vec3d relStart = start.subtract(pos.getX(), pos.getY(), pos.getZ());
     Vec3d relEnd = end.subtract(pos.getX(), pos.getY(), pos.getZ());
 
-    Collection<EnumFacing> sides = getSides(blockState);
-
     RayTraceResult blockCollision = null;
-    Optional<EnumFacing> hitPart = Optional.empty();
-    Vec3d hitPos = null; // We set the hit position to the center so that later we can tell which part was hit
+    FiberPart hitPart = null;
+    Vec3d hitPos = null;
 
-    AxisAlignedBB bb = getBoundingBoxForConnection(null);
-    RayTraceResult collision = bb.calculateIntercept(relStart, relEnd);
-    if (collision != null) {
-      blockCollision = collision;
-      hitPos = bb.getCenter();
-    }
-
-    for (EnumFacing side : sides) {
-      bb = getBoundingBoxForConnection(side);
-      collision = bb.calculateIntercept(relStart, relEnd);
+    for (FiberPart part : FiberPart.values()) {
+      Optional<AxisAlignedBB> bbOpt = getBoundingBoxForPart(actualState, part);
+      if (!bbOpt.isPresent()) continue;
+      AxisAlignedBB bb = bbOpt.get();
+      RayTraceResult collision = bb.calculateIntercept(relStart, relEnd);
       if (collision != null && (blockCollision == null || collision.hitVec.distanceTo(relStart) < blockCollision.hitVec.distanceTo(relStart))) {
         blockCollision = collision;
-        hitPart = Optional.of(side);
-        hitPos = bb.getCenter();
+        hitPart = part;
+        hitPos = bb.getCenter(); // We set the hit position to the center so that later we can tell which part was hit
       }
     }
 
@@ -163,15 +142,16 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
       return null;
     } else {
       RayTraceResult res = new RayTraceResult(hitPos.addVector(pos.getX(), pos.getY(), pos.getZ()), blockCollision.sideHit, pos);
-      res.subHit = hitPart.map(EnumFacing::getIndex).orElse(-1);
+      res.subHit = hitPart.getIndex();
       return res;
     }
   }
 
-  public static AxisAlignedBB getBoundingBoxForConnection(@Nullable EnumFacing side) {
-    if (side == null) {
-      return new AxisAlignedBB(0.375D, 0.375D, 0.375D, 0.625D, 0.625D, 0.625D);
-    }
+  public static AxisAlignedBB getBoundingBoxForSelfAttachment(EnumFacing side) {
+    return getBoundingBoxForConnection(side);
+  }
+
+  public static AxisAlignedBB getBoundingBoxForConnection(EnumFacing side) {
     switch (side) {
       case DOWN:
         return new AxisAlignedBB(0.375D, 0D, 0.375D, 0.625D, 0.375D, 0.625D);
@@ -189,27 +169,47 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     throw new AssertionError("Should never get here.");
   }
 
-  private static Collection<EnumFacing> getSides(IBlockState state) {
-    if (state.getBlock().getClass() != BlockOpticalFiber.class) {
-      throw new AssertionError("Blockstate must be a BlockOpticalFiber.");
-    }
+  public static AxisAlignedBB getBoundingBoxForCenter() {
+    return new AxisAlignedBB(0.375D, 0.375D, 0.375D, 0.625D, 0.625D, 0.625D);
+  }
 
-    List<EnumFacing> sides = new ArrayList<>(6);
-    for (EnumFacing side : EnumFacing.VALUES) {
-      if (state.getValue(getPropertyFromSide(side))) {
-        sides.add(side);
+  public static Optional<AxisAlignedBB> getBoundingBoxForPart(IBlockState state, FiberPart part) {
+    if (part.getSide().isPresent()) {
+      EnumFacing side = part.getSide().get();
+      FiberSideType fiberSideType = state.getValue(getPropertyFromSide(side));
+      if (fiberSideType == FiberSideType.CONNECTION) {
+        return Optional.of(getBoundingBoxForConnection(side));
+      } else if (fiberSideType == FiberSideType.SELF_ATTACHMENT) {
+        return Optional.of(getBoundingBoxForSelfAttachment(side));
+      } else if (fiberSideType == FiberSideType.NONE) {
+        return Optional.empty();
+      } else {
+        throw new AssertionError("Should never get here.");
+      }
+    } else {
+      return Optional.of(getBoundingBoxForCenter());
+    }
+  }
+
+  public static Optional<AxisAlignedBB> getSelectedBoxForPart(IBlockState state, FiberPart part) {
+    if (part.getSide().isPresent()) {
+      EnumFacing side = part.getSide().get();
+      FiberSideType fiberSideType = state.getValue(getPropertyFromSide(side));
+      if (fiberSideType == FiberSideType.SELF_ATTACHMENT) {
+        return Optional.of(getBoundingBoxForSelfAttachment(side).union(getBoundingBoxForSelfAttachment(side.getOpposite()).offset(side.getFrontOffsetX(), side.getFrontOffsetY(), side.getFrontOffsetZ())));
       }
     }
-    return sides;
+    return getBoundingBoxForPart(state, part);
   }
 
   @Override
   public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean isActualState) {
-    for (EnumFacing side : EnumFacing.VALUES) {
-      if (state.getValue(getPropertyFromSide(side))) {
-        BlockOpticalFiber.addCollisionBoxToList(pos, entityBox, collidingBoxes, getBoundingBoxForConnection(side));
-      }
-    }
+    final IBlockState actualState = getActualState(state, worldIn, pos);
+    Arrays.stream(EnumFacing.VALUES)
+            .map(s -> getBoundingBoxForPart(actualState, FiberPart.fromSide(s)))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach(bb -> BlockOpticalFiber.addCollisionBoxToList(pos, entityBox, collidingBoxes, bb));
   }
 
   @Override
@@ -219,36 +219,42 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   }
 
   @SideOnly(Side.CLIENT)
+  @SuppressWarnings("unused")
   @SubscribeEvent (priority = EventPriority.LOW)
   public void drawSelectedBoundingBox(DrawBlockHighlightEvent e) {
     if(e.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
       World world = e.getPlayer().world;
       BlockPos pos = e.getTarget().getBlockPos();
-      IBlockState state = world.getBlockState(pos);
+      IBlockState state = world.getBlockState(pos).getActualState(world, pos);
       Block block = state.getBlock();
 
       if (block instanceof BlockOpticalFiber) {
-        EnumFacing side = e.getTarget().subHit == -1 ? null : EnumFacing.getFront(e.getTarget().subHit);
-        ((BlockOpticalFiber) block).selectedBoundingBox = getBoundingBoxForConnection(side).offset(pos);
-        e.getContext().drawSelectionBox(e.getPlayer(), e.getTarget(), 0, e.getPartialTicks());
-        e.setCanceled(true);
+        FiberPart part = FiberPart.fromIndex(e.getTarget().subHit);
+        Optional<AxisAlignedBB> boxOpt = getSelectedBoxForPart(state, part);
+        if (boxOpt.isPresent()) {
+          AxisAlignedBB box = boxOpt.get();
+         ((BlockOpticalFiber) block).selectedBoundingBox = box.offset(pos);
+          e.getContext().drawSelectionBox(e.getPlayer(), e.getTarget(), 0, e.getPartialTicks());
+          e.setCanceled(true);
+        }
       }
     }
   }
 
   @Override
   protected BlockStateContainer createBlockState() {
-    return new BlockStateContainer(this, upConnected, downConnected, northConnected, southConnected, eastConnected, westConnected, isController);
+    return new BlockStateContainer(this, down, up, north, south, west, east, isController);
   }
 
   @Override
   @Nonnull
   public IBlockState getActualState(@Nonnull IBlockState state, IBlockAccess worldIn, BlockPos pos) {
     for (EnumFacing side : EnumFacing.VALUES) {
-      PropertyBool property = getPropertyFromSide(side);
-      state = state.withProperty(property, state.getValue(property) || isFiberInPos(worldIn, pos.offset(side)));
+      if (isFiberInPos(worldIn, pos.offset(side))) {
+        PropertyFiberSide property = getPropertyFromSide(side);
+        state = state.withProperty(property, FiberSideType.SELF_ATTACHMENT);
+      }
     }
-
     return state;
   }
 
@@ -287,7 +293,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    */
   private TileOpticalFiber surrenderControllerStatus(World worldIn, TileOpticalFiberController oldController) {
     worldIn.setBlockState(oldController.getPos(), worldIn.getBlockState(oldController.getPos()).withProperty(isController, false), 2|4|16);
-    TileOpticalFiber newTile = TileOpticalFiber.getTileEntity(worldIn, oldController.getPos());
+    TileOpticalFiber newTile = Util.getTileChecked(worldIn, oldController.getPos(), TileOpticalFiber.class);
     newTile.importConnections(oldController);
     return newTile;
   }
@@ -300,7 +306,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
    */
   private TileOpticalFiberController becomeController(World worldIn, TileOpticalFiber oldFiber) {
     worldIn.setBlockState(oldFiber.getPos(), worldIn.getBlockState(oldFiber.getPos()).withProperty(isController, true), 2|4|16);
-    TileOpticalFiberController newController = TileOpticalFiberController.getTileEntity(worldIn, oldFiber.getPos());
+    TileOpticalFiberController newController = Util.getTileChecked(worldIn, oldFiber.getPos(), TileOpticalFiberController.class);
     newController.importConnections(oldFiber);
     assert newController.getNetworkBlocks().contains(oldFiber.getPos());
     return newController;
@@ -339,13 +345,13 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
       // We created a new network containing only ourselves
       assert worldIn.getTileEntity(pos) instanceof TileOpticalFiberController;
     } else {
-      TileOpticalFiber tile = TileOpticalFiber.getTileEntity(worldIn, pos);
+      TileOpticalFiber tile = Util.getTileChecked(worldIn, pos, TileOpticalFiber.class);
 
       // Find which controllers we joined
       Stack<TileOpticalFiberController> connectedControllers = new Stack<>();
       for (EnumFacing direction : EnumFacing.VALUES) {
         if (isFiberInPos(worldIn, pos.offset(direction))) {
-          TileOpticalFiberController con = TileOpticalFiberBase.getTileEntity(worldIn, pos.offset(direction)).getController();
+          TileOpticalFiberController con = Util.getTileChecked(worldIn, pos.offset(direction), TileOpticalFiberController.class).getController();
           if (!connectedControllers.contains(con)) connectedControllers.push(con);
         }
       }
@@ -426,10 +432,10 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
     for (Set<BlockPos> distinctNetwork : distinctNetworks) {
       if (blockDestroyedWasController || !distinctNetwork.contains(originalController.getPos())) {
         BlockPos farthest = getFarthest(distinctNetwork, destroyedBlockPos);
-        TileOpticalFiberController newController = becomeController(worldIn, TileOpticalFiber.getTileEntity(worldIn, farthest));
+        TileOpticalFiberController newController = becomeController(worldIn, Util.getTileChecked(worldIn, farthest, TileOpticalFiber.class));
         for (BlockPos pos : distinctNetwork) {
           // Move to the new network
-          TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
+          TileOpticalFiberBase tile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
           boolean success = originalController.removeFiber(tile);
           assert success;
           if (!pos.equals(newController.getPos())) {
@@ -444,7 +450,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
 
   @Override
   public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-    TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(worldIn, pos);
+    TileOpticalFiberBase tile = Util.getTileChecked(worldIn, pos, TileOpticalFiberBase.class);
     breakFiber(worldIn, pos, tile);
     super.breakBlock(worldIn, pos, state);
   }

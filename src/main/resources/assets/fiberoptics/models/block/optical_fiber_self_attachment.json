@@ -1,8 +1,8 @@
 {
   "ambientocclusion": false,
   "textures": {
-    "particle": "blocks/dirt",
-    "side": "blocks/dirt"
+    "particle": "blocks/anvil_base",
+    "side": "blocks/anvil_base"
   },
   "elements": [
     {

@@ -17,6 +17,8 @@ public abstract class GuiOpticalFiber extends GuiScreen {
 
   @Override
   public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    assert mc != null;
+    assert mc.renderEngine != null;
     mc.renderEngine.bindTexture(TEXTURE);
     drawTexturedModalRect((width-TEXTURE_WIDTH)/2, (height-TEXTURE_HEIGHT)/2, 0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
     super.drawScreen(mouseX, mouseY, partialTicks);

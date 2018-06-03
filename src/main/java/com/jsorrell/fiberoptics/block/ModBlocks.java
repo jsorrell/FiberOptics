@@ -2,6 +2,7 @@ package com.jsorrell.fiberoptics.block;
 
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiber;
+import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberClient;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberController;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -23,6 +24,7 @@ public class ModBlocks {
 
     GameRegistry.registerTileEntity(TileOpticalFiber.class, "optical_fiber");
     GameRegistry.registerTileEntity(TileOpticalFiberController.class, "optical_fiber_controller");
+    GameRegistry.registerTileEntity(TileOpticalFiberClient.class, "optical_fiber_client");
   }
 
   public static void registerItemBlocks(IForgeRegistry<Item> registry) {

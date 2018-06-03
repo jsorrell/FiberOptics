@@ -2,6 +2,7 @@ package com.jsorrell.fiberoptics.message.optical_fiber;
 
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.utils.Util;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -53,7 +54,7 @@ public class PacketSetSide implements IMessage {
       if (!world.isBlockLoaded(message.pos) || !BlockOpticalFiber.isFiberInPos(world, message.pos)) {
         return null;
       }
-      TileOpticalFiberBase tile = TileOpticalFiberBase.getTileEntity(world, message.pos);
+      TileOpticalFiberBase tile = Util.getTileChecked(world, message.pos, TileOpticalFiberBase.class);
       return new PacketOpenConnectionChooser(message.pos, message.side, tile.getConnections(message.side));
     }
   }

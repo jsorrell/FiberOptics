@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
 import com.jsorrell.fiberoptics.fiber_network.FiberNetwork;
+import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -81,22 +82,6 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
   @Override
   public void update() {
     this.fiberNetwork.doTransfers(this.world);
-  }
-
-  /**
-   * Gets the tile entity of type {@link TileOpticalFiberController} from the world.
-   * Only call this when sure that the tile exists and is of this type.
-   * @param world the world.
-   * @param pos the position of the tile.
-   * @return the tile entity of type {@link TileOpticalFiberController}.
-   */
-  public static TileOpticalFiberController getTileEntity(IBlockAccess world, BlockPos pos) {
-    TileEntity testTile = world.getTileEntity(pos);
-    Objects.requireNonNull(testTile, "Tile Entity at " + pos + " does not exist");
-    if (!(testTile instanceof TileOpticalFiberController)) {
-      throw new ClassCastException("Tile at " + pos + "  is not instance of TileOpticalFiberController");
-    }
-    return (TileOpticalFiberController) testTile;
   }
 
   @Override

@@ -5,6 +5,7 @@ import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
+import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
@@ -20,6 +21,7 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,9 +50,9 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
   private void setConnectedSide(EnumFacing side) {
     // Update blockstate and send to clients
     IBlockState state = this.world.getBlockState(this.pos);
-    PropertyBool property = BlockOpticalFiber.getPropertyFromSide(side);
-    if (!state.getValue(property)) {
-      state = state.withProperty(property, true);
+    PropertyFiberSide property = BlockOpticalFiber.getPropertyFromSide(side);
+    if (state.getValue(property) != FiberSideType.CONNECTION) {
+      state = state.withProperty(property, FiberSideType.CONNECTION);
       this.world.setBlockState(this.pos, state, 2);
     }
   }
@@ -90,8 +92,8 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
         }
       }
 
-      PropertyBool property = BlockOpticalFiber.getPropertyFromSide(connection.connectedSide);
-      IBlockState state = this.world.getBlockState(this.pos).withProperty(property, false);
+      PropertyFiberSide property = BlockOpticalFiber.getPropertyFromSide(connection.connectedSide);
+      IBlockState state = this.world.getBlockState(this.pos).withProperty(property, FiberSideType.SELF_ATTACHMENT);
       this.world.setBlockState(this.pos, state, 2);
       return true;
     }
@@ -138,7 +140,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     } else if (pos.equals(this.getController().pos)) {
       tileAtPos = this.getController();
     } else {
-      tileAtPos = getTileEntity(this.world, pos);
+      tileAtPos = Util.getTileChecked(this.world, pos, TileOpticalFiberBase.class);
     }
     return tileAtPos;
   }
@@ -162,7 +164,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
    * @param oldController the controller to import from.
    */
   void cannibalize(TileOpticalFiberController oldController) {
-    oldController.networkBlocks.forEach(pos -> addFiber(TileOpticalFiber.getTileEntity(this.world, pos)));
+    oldController.networkBlocks.forEach(pos -> addFiber(Util.getTileChecked(this.world, pos, TileOpticalFiber.class)));
     this.getController().fiberNetwork.cannibalize(oldController.fiberNetwork);
     this.getController().markDirty();
   }
@@ -246,21 +248,5 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
       OpticalFiberOutput output = new OpticalFiberOutput(outputs.getCompoundTagAt(i));
       this.connections.add(output);
     }
-  }
-
-  /**
-   * Gets the tile entity of type {@link TileOpticalFiberBase} from the world.
-   * Only call this when sure that the tile exists and is of this type.
-   * @param world the world.
-   * @param pos the position of the tile.
-   * @return the tile entity of type {@link TileOpticalFiberBase}.
-   */
-  public static TileOpticalFiberBase getTileEntity(IBlockAccess world, BlockPos pos) {
-    TileEntity testTile = world.getTileEntity(pos);
-    Objects.requireNonNull(testTile, "Tile Entity at " + pos + " does not exist");
-    if (!(testTile instanceof TileOpticalFiberBase)) {
-      throw new ClassCastException("Tile at " + pos + "  is not instance of TileOpticalFiberBase");
-    }
-    return (TileOpticalFiberBase) testTile;
   }
 }

@@ -3,6 +3,7 @@ package com.jsorrell.fiberoptics.fiber_network.connection;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
+import com.jsorrell.fiberoptics.utils.Util;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -143,6 +144,6 @@ public abstract class OpticalFiberConnection {
    * @return {@code true} iff the connection was successfully added.
    */
   public boolean initialize(IBlockAccess world) {
-    return TileOpticalFiberBase.getTileEntity(world, this.pos).addConnection(this);
+    return Util.getTileChecked(world, this.pos, TileOpticalFiberBase.class).addConnection(this);
   }
 }
