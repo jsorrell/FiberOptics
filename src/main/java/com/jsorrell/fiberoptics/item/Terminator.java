@@ -1,10 +1,7 @@
 package com.jsorrell.fiberoptics.item;
 
 import com.jsorrell.fiberoptics.block.ModBlocks;
-import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
-import com.jsorrell.fiberoptics.block.optical_fiber.FiberPart;
-import com.jsorrell.fiberoptics.block.optical_fiber.FiberSideType;
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
+import com.jsorrell.fiberoptics.block.optical_fiber.*;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenSideChooser;
@@ -50,7 +47,7 @@ public class Terminator extends ItemBase {
               if (boxOpt.isPresent() && boxOpt.get().contains(hitVec)) {
                 side = testSide;
                 if (state.getValue(BlockOpticalFiber.getPropertyFromSide(side)) == FiberSideType.SELF_ATTACHMENT) {
-                  BlockOpticalFiber.splitConnection(worldIn, pos, side);
+                  OpticalFiberUtil.splitConnection(worldIn, pos, side);
                   return EnumActionResult.SUCCESS;
                 }
                 break;

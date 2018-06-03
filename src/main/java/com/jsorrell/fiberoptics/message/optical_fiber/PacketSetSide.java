@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.message.optical_fiber;
 
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
+import com.jsorrell.fiberoptics.block.optical_fiber.OpticalFiberUtil;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.utils.Util;
 import io.netty.buffer.ByteBuf;

@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
 import com.jsorrell.fiberoptics.FiberOptics;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -17,6 +18,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
 
   @Override
   public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    assert Minecraft.getMinecraft().renderEngine != null;
     assert mc != null;
     assert mc.renderEngine != null;
     mc.renderEngine.bindTexture(TEXTURE);
