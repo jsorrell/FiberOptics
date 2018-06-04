@@ -328,7 +328,10 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
   public void handleRightClick(PlayerInteractEvent.RightClickBlock e) {
     if (!e.getWorld().isRemote) {
       IBlockState state = e.getWorld().getBlockState(e.getPos());
-      BlockPos facePos = e.getPos().offset(e.getFace());
+      assert e.getFace() != null; // Not null for RightClockBlock
+      BlockPos adjacentPos = e.getPos().offset(e.getFace());
+      IBlockState adjacentState = e.getWorld().getBlockState(adjacentPos);
+      Block adjacentBlock = adjacentState.getBlock();
 
       if (state.getBlock() instanceof BlockOpticalFiber) {
         if (e.getEntityPlayer().getHeldItem(e.getHand()).getItem() instanceof Terminator) {
@@ -339,11 +342,11 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
             if (BlockOpticalFiber.getBoundingBoxForCenter().contains(hitVec)) {
               /* HIT CENTER */
               FiberSideType faceType = state.getValue(BlockOpticalFiber.getPropertyFromSide(e.getFace()));
-              if (BlockOpticalFiber.isFiberInPos(e.getWorld(), facePos)) {
+              if (adjacentBlock instanceof BlockOpticalFiber) {
                 /* There is another fiber on the side we hit. Try to join the fibers. */
                 assert faceType == FiberSideType.NONE; // We shouldn't be able to hit a face of the center unless that face doesn't have a connection.
-                FiberSideType adjacentFaceState = e.getWorld().getBlockState(facePos).getValue(BlockOpticalFiber.getPropertyFromSide(e.getFace().getOpposite()));
-                if (adjacentFaceState != FiberSideType.CONNECTION) {
+                FiberSideType adjacentFaceType = adjacentState.getValue(BlockOpticalFiber.getPropertyFromSide(e.getFace().getOpposite()));
+                if (adjacentFaceType != FiberSideType.CONNECTION) {
                   OpticalFiberUtil.joinConnection(e.getWorld(), e.getPos(), e.getFace());
                 }
               } else {
@@ -371,10 +374,14 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
             }
           }
         }
-      } else if (e.getWorld().getBlockState(facePos).getBlock() instanceof BlockOpticalFiber && e.getEntityPlayer().isSneaking()) {
-        TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), facePos, TileOpticalFiberBase.class);
-        FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(facePos, e.getFace().getOpposite(), tile.getConnections(e.getFace().getOpposite())), (EntityPlayerMP) e.getEntityPlayer());
-        e.setUseBlock(Event.Result.DENY);
+        //TODO change tile entity check to checking if we can add connection or get rid of entirely so that we can edit/remove connections facing a non-tile-entity.
+      } else if (adjacentBlock instanceof BlockOpticalFiber && state.getBlock().hasTileEntity(state)) {
+        if (e.getEntityPlayer().isSneaking()) {
+          /* Hit a tile face adjacent to a fiber while sneaking */
+          TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), adjacentPos, TileOpticalFiberBase.class);
+          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(adjacentPos, e.getFace().getOpposite(), tile.getConnections(e.getFace().getOpposite())), (EntityPlayerMP) e.getEntityPlayer());
+          e.setUseBlock(Event.Result.DENY);
+        }
       }
     }
   }
