@@ -5,6 +5,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.input.Keyboard;
+
+import java.io.IOException;
 
 public abstract class GuiOpticalFiber extends GuiScreen {
   protected final ResourceLocation TEXTURE = new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png");
@@ -29,5 +32,14 @@ public abstract class GuiOpticalFiber extends GuiScreen {
   @Override
   public boolean doesGuiPauseGame() {
     return false;
+  }
+
+  @Override
+  protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    if (keyCode == 1 || this.mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode))
+    {
+      this.mc.displayGuiScreen(null);
+    }
+    super.keyTyped(typedChar, keyCode);
   }
 }
