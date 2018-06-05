@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.utils;
+package com.jsorrell.fiberoptics.util;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.tileentity.TileEntity;

@@ -4,7 +4,7 @@ import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.FiberSideType;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.message.MessagePos;
-import com.jsorrell.fiberoptics.utils.Util;
+import com.jsorrell.fiberoptics.util.Util;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;

@@ -1,6 +1,6 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
-import com.jsorrell.fiberoptics.utils.Util;
+import com.jsorrell.fiberoptics.util.Util;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;

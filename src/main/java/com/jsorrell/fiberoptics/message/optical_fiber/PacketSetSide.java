@@ -1,9 +1,9 @@
 package com.jsorrell.fiberoptics.message.optical_fiber;
 
+import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
-import com.jsorrell.fiberoptics.block.optical_fiber.OpticalFiberUtil;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.utils.Util;
+import com.jsorrell.fiberoptics.util.Util;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 public class PacketSetSide implements IMessage {
   private BlockPos pos;
@@ -56,7 +57,8 @@ public class PacketSetSide implements IMessage {
         return null;
       }
       TileOpticalFiberBase tile = Util.getTileChecked(world, message.pos, TileOpticalFiberBase.class);
-      return new PacketOpenConnectionChooser(message.pos, message.side, tile.getConnections(message.side));
+      // TODO send sides with possible connections only
+      return new PacketOpenConnectionChooser(message.pos, message.side == null ? Arrays.asList(EnumFacing.VALUES) : ImmutableList.of(message.side), tile.getConnections(message.side));
     }
   }
 }

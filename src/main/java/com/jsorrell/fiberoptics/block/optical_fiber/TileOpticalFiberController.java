@@ -1,14 +1,11 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
 import com.jsorrell.fiberoptics.fiber_network.FiberNetwork;
-import com.jsorrell.fiberoptics.utils.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.ParametersAreNonnullByDefault;

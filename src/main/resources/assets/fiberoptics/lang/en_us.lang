@@ -10,6 +10,14 @@ item.terminator.name=Terminator
 # Creative Tab
 itemGroup.fiberoptics=Fiber Optics
 
+# Directions
+enumFacing.down.name=Down
+enumFacing.up.name=Up
+enumFacing.north.name=North
+enumFacing.south.name=South
+enumFacing.west.name=West
+enumFacing.east.name=East
+
 # Transfer Types
 transfer_type.items.name=Items
 transfer_type.forge_fluids.name=Fluids

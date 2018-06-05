@@ -1,11 +1,12 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
+import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.block.BlockTileEntityBase;
 import com.jsorrell.fiberoptics.item.Terminator;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenSideChooser;
-import com.jsorrell.fiberoptics.utils.Util;
+import com.jsorrell.fiberoptics.util.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -24,7 +25,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.world.NoteBlockEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -352,7 +352,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
               } else {
                 /* There is not another fiber on the side we hit. Make a connection */
                 TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), e.getPos(), TileOpticalFiberBase.class);
-                FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(e.getPos(), e.getFace(), tile.getConnections(e.getFace())), (EntityPlayerMP) e.getEntityPlayer());
+                FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(e.getPos(), ImmutableList.of(e.getFace()), tile.getConnections(e.getFace())), (EntityPlayerMP) e.getEntityPlayer());
               }
             } else {
               /* HIT ONE OF THE SIDES */
@@ -367,7 +367,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
                     /* Hit a connection: Try to add another to this side. */
                     assert sideType == FiberSideType.CONNECTION;
                     TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), e.getPos(), TileOpticalFiberBase.class);
-                    FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(e.getPos(), side, tile.getConnections(side)), (EntityPlayerMP) e.getEntityPlayer());
+                    FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(e.getPos(), ImmutableList.of(side), tile.getConnections(side)), (EntityPlayerMP) e.getEntityPlayer());
                   }
                 }
               }
@@ -379,7 +379,7 @@ public class BlockOpticalFiber extends BlockTileEntityBase {
         if (e.getEntityPlayer().isSneaking()) {
           /* Hit a tile face adjacent to a fiber while sneaking */
           TileOpticalFiberBase tile = Util.getTileChecked(e.getWorld(), adjacentPos, TileOpticalFiberBase.class);
-          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(adjacentPos, e.getFace().getOpposite(), tile.getConnections(e.getFace().getOpposite())), (EntityPlayerMP) e.getEntityPlayer());
+          FiberOpticsPacketHandler.INSTANCE.sendTo(new PacketOpenConnectionChooser(adjacentPos, ImmutableList.of(e.getFace().getOpposite()), tile.getConnections(e.getFace().getOpposite())), (EntityPlayerMP) e.getEntityPlayer());
           e.setUseBlock(Event.Result.DENY);
         }
       }

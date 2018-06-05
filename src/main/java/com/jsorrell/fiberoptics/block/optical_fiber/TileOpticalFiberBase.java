@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
-import com.jsorrell.fiberoptics.utils.Util;
+import com.jsorrell.fiberoptics.util.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;

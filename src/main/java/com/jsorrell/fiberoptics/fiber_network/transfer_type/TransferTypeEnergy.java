@@ -1,14 +1,30 @@
 package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
+import com.jsorrell.fiberoptics.FiberOptics;
+import com.jsorrell.fiberoptics.util.SizedTexturePart;
+import com.jsorrell.fiberoptics.util.TexturePart;
+import com.jsorrell.fiberoptics.util.TextureSize;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.model.TextureOffset;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
+  private static final SizedTexturePart ICON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(0, 43), new TextureSize(16,16));
+
   @Override
   public Capability<IEnergyStorage> getCapability() {
     return CapabilityEnergy.ENERGY;
@@ -51,5 +67,11 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   @Override
   public String getUnlocalizedName() {
     return "forge_energy";
+  }
+
+  @Override
+  @SideOnly(Side.CLIENT)
+  public void renderItemToGui(Minecraft mc, Gui gui, int x, int y, float partialTicks) {
+    ICON_TEXTURE.drawTexturePart(mc, gui, x, y);
   }
 }

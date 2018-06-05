@@ -2,7 +2,7 @@ package com.jsorrell.fiberoptics.message.optical_fiber;
 
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
-import com.jsorrell.fiberoptics.utils.Util;
+import com.jsorrell.fiberoptics.util.Util;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
