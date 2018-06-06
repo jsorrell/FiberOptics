@@ -94,9 +94,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
         }
       }
 
-      PropertyFiberSide property = BlockOpticalFiber.getPropertyFromSide(connection.connectedSide);
-      IBlockState state = this.world.getBlockState(this.pos).withProperty(property, FiberSideType.SELF_ATTACHMENT);
-      this.world.setBlockState(this.pos, state, 2);
+      BlockOpticalFiber.setSideType(this.world, this.pos, connection.connectedSide, FiberSideType.NONE);
       return true;
     }
     return false;
