@@ -11,10 +11,16 @@ public class FiberOpticsPacketHandler {
   private static int discriminator = 0;
 
   public static void registerPacketHandlers() {
+    /* Edit Connections */
     INSTANCE.registerMessage(PacketCreateConnection.Handler.class, PacketCreateConnection.class, discriminator++, Side.SERVER);
+    INSTANCE.registerMessage(PacketRemoveConnection.Handler.class, PacketRemoveConnection.class, discriminator++, Side.SERVER);
+
+    /* Open GUIs */
     INSTANCE.registerMessage(PacketOpenSideChooser.Handler.class, PacketOpenSideChooser.class, discriminator++, Side.CLIENT);
     INSTANCE.registerMessage(PacketOpenConnectionChooser.Handler.class, PacketOpenConnectionChooser.class, discriminator++, Side.CLIENT);
     INSTANCE.registerMessage(PacketSetSide.Handler.class, PacketSetSide.class, discriminator++, Side.SERVER);
+
+    /* Sync */
     INSTANCE.registerMessage(PacketClientSync.Handler.class, PacketClientSync.class, discriminator++, Side.CLIENT);
     INSTANCE.registerMessage(PacketClientSync.Request.Handler.class, PacketClientSync.Request.class, discriminator++, Side.SERVER);
   }

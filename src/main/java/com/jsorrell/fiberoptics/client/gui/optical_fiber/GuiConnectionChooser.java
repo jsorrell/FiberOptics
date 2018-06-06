@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
+import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketRemoveConnection;
 import com.jsorrell.fiberoptics.util.AADirection2D;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import mcp.MethodsReturnNonnullByDefault;
@@ -178,8 +180,8 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
     } else if (button instanceof GuiButtonConnectionEdit) {
       this.mc.displayGuiScreen(new GuiConnectionEditor(this.pos, ((GuiButtonConnectionEdit) button).listElement.connection));
     } else if (button instanceof GuiButtonConnectionDelete) {
-      //TODO Implement
       GuiConnectionListElement listElement = ((GuiButtonConnectionDelete) button).listElement;
+      FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketRemoveConnection(listElement.connection));
       this.connections.remove(listElement.connection);
       this.removeListElement(listElement);
     }
