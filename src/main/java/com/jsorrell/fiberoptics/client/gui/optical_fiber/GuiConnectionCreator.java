@@ -6,7 +6,6 @@ import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionF
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketCreateConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
-import com.jsorrell.fiberoptics.util.TextureSize;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.model.TextureOffset;
@@ -14,11 +13,12 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.awt.*;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GuiConnectionCreator extends GuiConnectionBuilder {
-  protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new TextureSize(206, 195));
+  protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
   protected static final int BUTTON_WIDTH = 200;
   protected static final int BUTTON_HEIGHT = 20;
   protected static final int SUBMIT_BUTTON = 0;

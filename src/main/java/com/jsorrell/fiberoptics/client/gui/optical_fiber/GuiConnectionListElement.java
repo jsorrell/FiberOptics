@@ -3,7 +3,6 @@ package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
-import com.jsorrell.fiberoptics.util.TextureSize;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.model.TextureOffset;
@@ -12,19 +11,20 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.awt.*;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
 public class GuiConnectionListElement extends GuiListElement {
 
-  protected static final TextureSize TYPE_ICON_SIZE = new TextureSize(16, 16);
+  protected static final Dimension TYPE_ICON_SIZE = new Dimension(16, 16);
   protected static final int TYPE_ICON_X = 2;
   protected static final int TYPE_ICON_Y = 3;
 
   protected static final int DIRECTION_ICON_X = 20;
   protected static final int DIRECTION_ICON_Y = 3;
-  protected static final SizedTexturePart INPUT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(17, 43), new TextureSize(16, 16));
-  protected static final SizedTexturePart OUTPUT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(33, 43), new TextureSize(16, 16));
+  protected static final SizedTexturePart INPUT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(17, 43), new Dimension(16, 16));
+  protected static final SizedTexturePart OUTPUT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(33, 43), new Dimension(16, 16));
 
   protected static final int CHANNEL_NAME_X = 39;
   protected static final int MAX_CHANNEL_NAME_WIDTH = 77;

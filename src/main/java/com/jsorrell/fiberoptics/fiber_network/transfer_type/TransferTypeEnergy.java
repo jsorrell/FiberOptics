@@ -2,8 +2,6 @@ package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
-import com.jsorrell.fiberoptics.util.TexturePart;
-import com.jsorrell.fiberoptics.util.TextureSize;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -19,11 +17,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.awt.*;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
-  private static final SizedTexturePart ICON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(0, 43), new TextureSize(16,16));
+  private static final SizedTexturePart ICON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(0, 43), new Dimension(16,16));
 
   @Override
   public Capability<IEnergyStorage> getCapability() {

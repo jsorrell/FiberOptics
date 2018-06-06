@@ -4,18 +4,18 @@ import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketSetSide;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
-import com.jsorrell.fiberoptics.util.TextureSize;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.model.TextureOffset;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GuiSideChooser extends GuiOpticalFiber {
-  protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new TextureSize(206, 195));
+  protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
   private static final int SIDE_BUTTON_HEIGHT = 20;
   private static final int SIDE_BUTTON_WIDTH = 200;
   public final List<GuiButton> sideButtons = new ArrayList<>(7);
@@ -29,6 +29,7 @@ public class GuiSideChooser extends GuiOpticalFiber {
   // TODO maybe do this ender io style of showing connected stuff rather than having to choose North or East or whatever.
   @Override
   public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    if (this.mc == null) return; // Is this a bug in forge? Sometimes this is called by EntityRenderer#updateCameraAndRender before GuiScreen#setWorldAndResolution
     TEXTURE.drawTexturePart(this.mc, this, this.textureStartX, this.textureStartY);
     super.drawScreen(mouseX, mouseY, partialTicks);
   }

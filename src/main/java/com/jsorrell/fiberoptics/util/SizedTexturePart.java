@@ -8,23 +8,25 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.awt.*;
+
 @SideOnly(Side.CLIENT)
 public class SizedTexturePart extends TexturePart {
-  public final TextureSize size;
+  public final Dimension size;
 
-  public SizedTexturePart(ResourceLocation texture, TextureSize size) {
+  public SizedTexturePart(ResourceLocation texture, Dimension size) {
     super(texture);
     Preconditions.checkNotNull(size);
     this.size = size;
   }
 
-  public SizedTexturePart(ResourceLocation texture, TextureOffset offset, TextureSize size) {
+  public SizedTexturePart(ResourceLocation texture, TextureOffset offset, Dimension size) {
     super(texture, offset);
     Preconditions.checkNotNull(size);
     this.size = size;
   }
 
-  public SizedTexturePart(TexturePart part, TextureSize size) {
+  public SizedTexturePart(TexturePart part, Dimension size) {
     this(part.texture, part.offset, size);
   }
 
