@@ -1,5 +1,6 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
+import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import net.minecraft.client.Minecraft;
@@ -11,7 +12,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.awt.*;
-import java.util.List;
+import java.util.Collection;
 
 @SideOnly(Side.CLIENT)
 public class GuiListElement extends Gui {
@@ -23,7 +24,9 @@ public class GuiListElement extends Gui {
     this.id = id;
   }
 
-  public void addButtonsToList(List<GuiButton> buttonList, int x, int y) { }
+  public Collection<GuiButton> initListElement(int x, int y) {
+    return ImmutableList.of();
+  }
 
   public void drawListElement(Minecraft mc, int mouseX, int mouseY, int x, int y, float partialTicks) {
     GlStateManager.color(1F, 1F, 1F, 1F);

@@ -107,8 +107,9 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
     this.textureStartX = (this.width - TEXTURE.size.width)/2;
     this.textureStartY = (this.height - TEXTURE.size.height)/2;
 
+    /* Init List Elements */
     for (int i = this.getTopListElement(); i <= this.getBottomListElement(); ++i) {
-      this.listElements.get(i).addButtonsToList(this.buttonList, getListElementX(), getListElementY(i));
+      this.buttonList.addAll(this.listElements.get(i).initListElement(getListElementX(), getListElementY(i)));
     }
 
     /* Create Scroller */

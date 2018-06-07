@@ -1,5 +1,6 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
+import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
@@ -12,7 +13,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.awt.*;
-import java.util.List;
+import java.util.Collection;
 
 @SideOnly(Side.CLIENT)
 public class GuiConnectionListElement extends GuiListElement {
@@ -46,9 +47,11 @@ public class GuiConnectionListElement extends GuiListElement {
   }
 
   @Override
-  public void addButtonsToList(List<GuiButton> buttonList, int x, int y) {
-    buttonList.add(this.editButton = new GuiButtonConnectionEdit(this.id, x + EDIT_BUTTON_X, y + EDIT_BUTTON_Y, this));
-    buttonList.add(this.deleteButton = new GuiButtonConnectionDelete(this.id, x + DELETE_BUTTON_X, y + DELETE_BUTTON_Y, this));
+  public Collection<GuiButton> initListElement(int x, int y) {
+
+    this.editButton = new GuiButtonConnectionEdit(this.id, x + EDIT_BUTTON_X, y + EDIT_BUTTON_Y, this);
+    this.deleteButton = new GuiButtonConnectionDelete(this.id, x + DELETE_BUTTON_X, y + DELETE_BUTTON_Y, this);
+    return ImmutableList.of(this.editButton, this.deleteButton);
   }
 
   @Override

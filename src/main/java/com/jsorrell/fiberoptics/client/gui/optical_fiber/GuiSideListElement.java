@@ -1,12 +1,13 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.EnumFacing;
 
-import java.util.List;
+import java.util.Collection;
 
 public class GuiSideListElement extends GuiListElement {
   protected static final int CREATE_BUTTON_X = 137;
@@ -25,8 +26,8 @@ public class GuiSideListElement extends GuiListElement {
   }
 
   @Override
-  public void addButtonsToList(List<GuiButton> buttonList, int x, int y) {
-    buttonList.add(addButton = new GuiButtonConnectionAdd(id, x + CREATE_BUTTON_X, y + CREATE_BUTTON_Y, this));
+  public Collection<GuiButton> initListElement(int x, int y) {
+    return ImmutableList.of(addButton = new GuiButtonConnectionAdd(id, x + CREATE_BUTTON_X, y + CREATE_BUTTON_Y, this));
   }
 
   @Override
