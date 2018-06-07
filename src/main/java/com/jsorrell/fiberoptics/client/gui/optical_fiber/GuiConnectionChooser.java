@@ -25,7 +25,7 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class GuiConnectionChooser extends GuiOpticalFiber {
-  protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_list.png"), new Dimension(206, 195));
+  protected static final SizedTexturePart BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_list.png"), new Dimension(206, 195));
   protected static final Rectangle CONNECTION_LIST_BOX = new Rectangle(13, 23, 157, 161);
 
   protected static final int LIST_ELEMENT_HEIGHT = 23;
@@ -52,8 +52,6 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
 
   @Nullable
   private GuiConnectionChooserScroller scroller = null;
-  private int textureStartX;
-  private int textureStartY;
 
   /* If side is not null, we have a single side add element then connections.
    * If side is null, we have a side element for each side and connections for these sides between.
@@ -66,14 +64,20 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
     this.listElements = generateListElements();
   }
 
+  @Nullable
+  @Override
+  public SizedTexturePart getBackgroundTexture() {
+    return BACKGROUND;
+  }
+
   private int getListElementX() {
-    return this.textureStartX + CONNECTION_LIST_BOX.x;
+    return this.backgroundStart.x + CONNECTION_LIST_BOX.x;
   }
 
   private int getListElementY(int idx) {
     int actualIdx = idx - this.getTopListElement();
     assert 0 <= actualIdx && actualIdx < MAX_LIST_ELEMENTS;
-    return this.textureStartY + CONNECTION_LIST_BOX.y + actualIdx * LIST_ELEMENT_HEIGHT;
+    return this.backgroundStart.y + CONNECTION_LIST_BOX.y + actualIdx * LIST_ELEMENT_HEIGHT;
   }
 
   private List<GuiListElement> generateListElements() {
@@ -98,30 +102,6 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
       }
     }
     return out;
-  }
-
-  @Override
-  public void initGui() {
-    super.initGui();
-
-    this.textureStartX = (this.width - TEXTURE.size.width)/2;
-    this.textureStartY = (this.height - TEXTURE.size.height)/2;
-
-    /* Init List Elements */
-    for (int i = this.getTopListElement(); i <= this.getBottomListElement(); ++i) {
-      this.buttonList.addAll(this.listElements.get(i).initListElement(getListElementX(), getListElementY(i)));
-    }
-
-    /* Create Scroller */
-    int scrollX = textureStartX + SCROLLER_BOX.x;
-    int scrollY = textureStartY + SCROLLER_BOX.y;
-    if (this.scroller != null) {
-      this.scroller.setPos(scrollX, scrollY);
-    } else {
-      this.scroller = new GuiConnectionChooserScroller(0, textureStartX + SCROLLER_BOX.x, textureStartY + SCROLLER_BOX.y, AADirection2D.DOWN, SCROLLER_BOX.height, this.getNumScrollPositions());
-      this.scroller.scrollTo(0F);
-      this.scroller.setLocked(!this.needsScrolling());
-    }
   }
 
   private void removeListElement(GuiListElement listElement) {
@@ -150,6 +130,27 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
   }
 
   @Override
+  public void initGui() {
+    super.initGui();
+
+    /* Init List Elements */
+    for (int i = this.getTopListElement(); i <= this.getBottomListElement(); ++i) {
+      this.buttonList.addAll(this.listElements.get(i).initListElement(getListElementX(), getListElementY(i)));
+    }
+
+    /* Create Scroller */
+    int scrollX = this.backgroundStart.x + SCROLLER_BOX.x;
+    int scrollY = this.backgroundStart.y + SCROLLER_BOX.y;
+    if (this.scroller != null) {
+      this.scroller.setPos(scrollX, scrollY);
+    } else {
+      this.scroller = new GuiConnectionChooserScroller(0, backgroundStart.x + SCROLLER_BOX.x, backgroundStart.y + SCROLLER_BOX.y, AADirection2D.DOWN, SCROLLER_BOX.height, this.getNumScrollPositions());
+      this.scroller.scrollTo(0F);
+      this.scroller.setLocked(!this.needsScrolling());
+    }
+  }
+
+  @Override
   public void drawScreen(int mouseX, int mouseY, float partialTicks) {
     if (this.mc == null) return; // Is this a bug in forge? Sometimes this is called by EntityRenderer#updateCameraAndRender before GuiScreen#setWorldAndResolution
 
@@ -161,7 +162,8 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
     GlStateManager.color(1F, 1F, 1F, 1F);
 
     /* Background */
-    TEXTURE.drawTexturePart(this.mc, this, this.textureStartX, this.textureStartY);
+    this.drawBackground();
+    BACKGROUND.drawTexturePart(this.mc, this, backgroundStart.x, backgroundStart.y);
 
     /* Scrollbar */
     if (this.scroller != null) {
@@ -177,7 +179,7 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
   @Override
   public void actionPerformed(GuiButton button) {
     if (button instanceof GuiButtonConnectionAdd) {
-      this.mc.displayGuiScreen(new GuiTypeChooser(this.pos, ((GuiButtonConnectionAdd) button).listElement.side));
+      this.mc.displayGuiScreen(new GuiTypeChooser(this.pos, ((GuiButtonConnectionAdd) button).listElement.side, Arrays.asList(ModTransferTypes.VALUES)));
     } else if (button instanceof GuiButtonConnectionEdit) {
       this.mc.displayGuiScreen(new GuiConnectionEditor(this.pos, ((GuiButtonConnectionEdit) button).listElement.connection));
     } else if (button instanceof GuiButtonConnectionDelete) {
@@ -191,7 +193,7 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
   @Override
   protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
     super.mouseClicked(mouseX, mouseY, mouseButton);
-    if (SCROLLER_BOX.contains(mouseX - this.textureStartX, mouseY - this.textureStartY) && this.scroller != null)
+    if (SCROLLER_BOX.contains(mouseX - backgroundStart.x, mouseY - backgroundStart.y) && this.scroller != null)
       this.scroller.mouseClicked(mouseX, mouseY, mouseButton);
   }
 

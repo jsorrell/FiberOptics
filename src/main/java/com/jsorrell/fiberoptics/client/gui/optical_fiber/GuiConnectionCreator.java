@@ -18,33 +18,27 @@ import java.awt.*;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GuiConnectionCreator extends GuiConnectionBuilder {
-  protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
+  protected static final SizedTexturePart BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
   protected static final int BUTTON_WIDTH = 200;
   protected static final int BUTTON_HEIGHT = 20;
   protected static final int SUBMIT_BUTTON = 0;
   protected static final int CANCEL_BUTTON = 1;
 
-  private int textureStartX;
-  private int textureStartY;
-
-
   public GuiConnectionCreator(OpticalFiberConnectionFactory connectionFactory) {
     super(connectionFactory);
   }
 
+  @Nullable
   @Override
-  public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-    TEXTURE.drawTexturePart(this.mc, this, this.textureStartX, this.textureStartY);
-    super.drawScreen(mouseX, mouseY, partialTicks);
+  public SizedTexturePart getBackgroundTexture() {
+    return BACKGROUND;
   }
 
   @Override
   public void initGui() {
-    this.textureStartX = (this.width - TEXTURE.size.width)/2;
-    this.textureStartY = (this.height - TEXTURE.size.height)/2;
-
-    buttonList.add(new GuiButton(CANCEL_BUTTON, (width-BUTTON_WIDTH)/2, this.textureStartY + TEXTURE.size.height - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, "Cancel"));
-    buttonList.add(new GuiButton(SUBMIT_BUTTON, (width-BUTTON_WIDTH)/2, this.textureStartY + TEXTURE.size.height - 2*BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, "Submit"));
+    super.initGui();
+    buttonList.add(new GuiButton(CANCEL_BUTTON, (width-BUTTON_WIDTH)/2, this.backgroundStart.y + BACKGROUND.size.height - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, "Cancel"));
+    buttonList.add(new GuiButton(SUBMIT_BUTTON, (width-BUTTON_WIDTH)/2, this.backgroundStart.y + BACKGROUND.size.height - 2*BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, "Submit"));
   }
 
   @Override
