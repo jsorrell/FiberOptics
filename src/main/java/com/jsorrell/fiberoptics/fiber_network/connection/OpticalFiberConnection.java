@@ -5,6 +5,7 @@ import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import com.jsorrell.fiberoptics.util.Util;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -67,13 +68,26 @@ public abstract class OpticalFiberConnection {
   }
 
   public enum TransferDirection {
-    INPUT,
-    OUTPUT
+    EXTRACT("extract"), // Extract from tile entity into network
+    INSERT("insert"); // Insert into tile entity from network
+    private final String unlocalizedName;
+
+    TransferDirection(String unlocalizedName) {
+      this.unlocalizedName = unlocalizedName;
+    }
+
+    public String getUnlocalizedName() {
+      return this.unlocalizedName;
+    }
+
+    public String getName() {
+      return I18n.format("transfer_direction." + getUnlocalizedName() + ".name");
+    }
   }
 
   public static OpticalFiberConnection fromKeyedBytes(ByteBuf buf) {
     int transferDirection = buf.readInt();
-    if (transferDirection == TransferDirection.INPUT.ordinal()) {
+    if (transferDirection == TransferDirection.EXTRACT.ordinal()) {
       return new OpticalFiberInput(buf);
     } else {
       return new OpticalFiberOutput(buf);

@@ -24,8 +24,8 @@ public class GuiConnectionListElement extends GuiListElement {
 
   protected static final int DIRECTION_ICON_X = 20;
   protected static final int DIRECTION_ICON_Y = 3;
-  protected static final SizedTexturePart INPUT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(17, 43), new Dimension(16, 16));
-  protected static final SizedTexturePart OUTPUT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(33, 43), new Dimension(16, 16));
+  protected static final SizedTexturePart INSERT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(17, 43), new Dimension(16, 16));
+  protected static final SizedTexturePart EXTRACT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(33, 43), new Dimension(16, 16));
 
   protected static final int CHANNEL_NAME_X = 39;
   protected static final int MAX_CHANNEL_NAME_WIDTH = 77;
@@ -66,10 +66,10 @@ public class GuiConnectionListElement extends GuiListElement {
 
     GlStateManager.color(1F, 1F, 1F, 1F);
     /* Direction Icon */
-    if (this.connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.INPUT) {
-      INPUT_ICON.drawTexturePart(mc,x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
+    if (this.connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.EXTRACT) {
+      EXTRACT_ICON.drawTexturePart(mc,x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
     } else {
-      OUTPUT_ICON.drawTexturePart(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
+      INSERT_ICON.drawTexturePart(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
     }
 
     /* Channel Name */

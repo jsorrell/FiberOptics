@@ -61,8 +61,8 @@ public class GuiTypeChooser extends GuiConnectionBuilder {
   }
 
   @Override
-  public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-    super.drawScreen(mouseX, mouseY, partialTicks);
+  public void drawScreenUnchecked(int mouseX, int mouseY, float partialTicks) {
+    super.drawScreenUnchecked(mouseX, mouseY, partialTicks);
     for (GuiButton button : this.buttonList) {
       if (button instanceof GuiTypeButton) {
         ((GuiTypeButton) button).drawTooltip(this.mc, mouseX, mouseY, partialTicks);

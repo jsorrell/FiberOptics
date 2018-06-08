@@ -54,7 +54,7 @@ public final class OpticalFiberOutput extends OpticalFiberConnection {
 
   @Override
   public TransferDirection getTransferDirection() {
-    return TransferDirection.OUTPUT;
+    return TransferDirection.INSERT;
   }
 
 

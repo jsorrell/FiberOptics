@@ -1,6 +1,5 @@
 package com.jsorrell.fiberoptics.fiber_network.connection;
 
-import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
@@ -10,7 +9,6 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.logging.Level;
 
 public final class OpticalFiberInput extends OpticalFiberConnection {
   // Outputs that match transfer type and channel
@@ -31,7 +29,7 @@ public final class OpticalFiberInput extends OpticalFiberConnection {
 
   @Override
   public TransferDirection getTransferDirection() {
-    return TransferDirection.INPUT;
+    return TransferDirection.EXTRACT;
   }
 
 

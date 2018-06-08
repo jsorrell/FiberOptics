@@ -151,9 +151,7 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
   }
 
   @Override
-  public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-    if (this.mc == null) return; // Is this a bug in forge? Sometimes this is called by EntityRenderer#updateCameraAndRender before GuiScreen#setWorldAndResolution
-
+  public void drawScreenUnchecked(int mouseX, int mouseY, float partialTicks) {
     if (this.scroller != null && this.scroller.updateMousePosition(mouseX, mouseY)) {
       this.buttonList.clear();
       this.initGui();

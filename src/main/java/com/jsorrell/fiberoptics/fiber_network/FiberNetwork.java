@@ -49,7 +49,7 @@ public class FiberNetwork implements INBTSerializable<NBTTagCompound> {
       this.existingChannels.get(ModTransferTypes.getIndex(connection.transferType)).add(connections.z);
     }
 
-    if (connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.INPUT) {
+    if (connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.EXTRACT) {
       Set<OpticalFiberInput> inputConnections = connections.x;
       inputConnections.add((OpticalFiberInput) connection);
     } else {
@@ -78,7 +78,7 @@ public class FiberNetwork implements INBTSerializable<NBTTagCompound> {
       connections = new Threetuple<>(new HashSet<>(), new TreeSet<>(OpticalFiberOutput.PRIORITY_COMPARATOR), channel);
     }
 
-    if (connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.INPUT) {
+    if (connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.EXTRACT) {
       Set<OpticalFiberInput> inputConnections = connections.x;
       inputConnections.add((OpticalFiberInput) connection);
     } else {
@@ -104,7 +104,7 @@ public class FiberNetwork implements INBTSerializable<NBTTagCompound> {
     Threetuple<Set<OpticalFiberInput>, TreeSet<OpticalFiberOutput>, Channel> connections = this.connections.get(subnetwork);
 
     if (connections == null) return false;
-    if (connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.INPUT) {
+    if (connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.EXTRACT) {
       if (!connections.x.remove((OpticalFiberInput) connection)) return false;
     } else {
       if (!connections.y.remove((OpticalFiberOutput) connection)) return false;

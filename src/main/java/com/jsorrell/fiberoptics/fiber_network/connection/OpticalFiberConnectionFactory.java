@@ -5,7 +5,6 @@ import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import org.lwjgl.Sys;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -63,13 +62,13 @@ public class OpticalFiberConnectionFactory {
     if (this.direction == null) missingInfo.push(ConnectionInfoType.DIRECTION);
     if (this.channel == null) missingInfo.push(ConnectionInfoType.CHANNEL);
     if (this.transferType == null) missingInfo.push(ConnectionInfoType.TRANSFER_TYPE);
-    if (this.direction.equals(OpticalFiberConnection.TransferDirection.OUTPUT) && this.priority == null) {
+    if (this.direction.equals(OpticalFiberConnection.TransferDirection.INSERT) && this.priority == null) {
       missingInfo.push(ConnectionInfoType.PRIORITY);
     }
 
     if (!missingInfo.empty()) throw new NonDefiningConnectionException(missingInfo);
 
-    if (this.direction.equals(OpticalFiberConnection.TransferDirection.INPUT)) return new OpticalFiberInput(this.pos, this.side, this.transferType, this.channel);
+    if (this.direction.equals(OpticalFiberConnection.TransferDirection.EXTRACT)) return new OpticalFiberInput(this.pos, this.side, this.transferType, this.channel);
     else return new OpticalFiberOutput(this.pos, this.side, this.transferType, this.channel, this.priority);
   }
 
