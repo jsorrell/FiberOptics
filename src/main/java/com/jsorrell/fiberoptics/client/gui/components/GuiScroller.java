@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.client.gui.optical_fiber;
+package com.jsorrell.fiberoptics.client.gui.components;
 
 import com.jsorrell.fiberoptics.util.AADirection2D;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;

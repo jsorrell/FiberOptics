@@ -1,24 +1,21 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
 import com.google.common.collect.ImmutableList;
-import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionFactory;
 import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
-import com.jsorrell.fiberoptics.util.SizedTexturePart;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.model.TextureOffset;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.client.config.GuiUtils;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import javax.vecmath.Point2d;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Collection;
 
-public class GuiTypeChooser extends GuiConnectionBuilder {
-  protected static final SizedTexturePart BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
+public class GuiScreenTypeChooser extends GuiOpticalFiber {
 
   private static final Point2d[][] BUTTON_POSITIONS = {
           {new Point2d(1/2D, 1/2D)}, // 1
@@ -31,20 +28,12 @@ public class GuiTypeChooser extends GuiConnectionBuilder {
   private static final int[] BUTTON_SIZES = { 96, 40, 32, 32, 28 };
 
   private final ImmutableList<TransferType> types;
+  protected final EnumFacing side;
 
-  public GuiTypeChooser(OpticalFiberConnectionFactory connectionFactory, Collection<TransferType> types) {
-    super(connectionFactory);
+  public GuiScreenTypeChooser(BlockPos pos, EnumFacing side, Collection<TransferType> types) {
+    super(pos);
+    this.side = side;
     this.types = ImmutableList.copyOf(types);
-  }
-
-  public GuiTypeChooser(BlockPos pos, EnumFacing side, Collection<TransferType> types) {
-    this(new OpticalFiberConnectionFactory(pos, side), types);
-  }
-
-  @Nullable
-  @Override
-  public SizedTexturePart getBackgroundTexture() {
-    return BACKGROUND;
   }
 
   @Override
@@ -53,8 +42,8 @@ public class GuiTypeChooser extends GuiConnectionBuilder {
     int size = BUTTON_SIZES[this.types.size()-1];
     for (int i = 0; i < this.types.size(); ++i) {
       Point2d pos = BUTTON_POSITIONS[this.types.size()-1][i];
-      int x = this.backgroundStart.x + (int)Math.round(pos.x * BACKGROUND.size.width - size/2D);
-      int y = this.backgroundStart.y + (int)Math.round(pos.y * BACKGROUND.size.height - size/2D);
+      int x = this.backgroundStart.x + (int)Math.round(pos.x * EMPTY_BACKGROUND.size.width - size/2D);
+      int y = this.backgroundStart.y + (int)Math.round(pos.y * EMPTY_BACKGROUND.size.height - size/2D);
       GuiTypeButton button = new GuiTypeButton(i, x, y, new Dimension(size, size), this.types.get(i));
       this.buttonList.add(button);
     }
@@ -73,9 +62,43 @@ public class GuiTypeChooser extends GuiConnectionBuilder {
   @Override
   protected void actionPerformed(GuiButton button) throws IOException {
     if (0 <= button.id && button.id < this.types.size()) {
-      this.connectionFactory.setTransferType(this.types.get(button.id));
-      mc.displayGuiScreen(new GuiDirectionChooser(this.connectionFactory));
+      TransferType type = this.types.get(button.id);
+      type.displayCreateConnectionGui(this.mc, this.pos, this.side);
     }
     super.actionPerformed(button);
+  }
+
+  public static class GuiTypeButton extends GuiButton {
+    public static final int MAX_TOOLTIP_TEXT_WIDTH = 80;
+
+    protected final Dimension size;
+    public final TransferType type;
+
+    public GuiTypeButton(int id, int x, int y, Dimension size, TransferType type) {
+      super(id, x, y, size.width, size.height, "");
+      this.type = type;
+      this.size = size;
+    }
+
+    @Override
+    public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+      if (this.visible) {
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.disableDepth();
+        GlStateManager.disableLighting();
+        // Icon
+        this.type.drawTypeIcon(mc, x, y, this.zLevel, size, partialTicks);
+      }
+    }
+
+    public void drawTooltip(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+      if (this.visible) {
+        // Tooltip
+        this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+        if (mc.currentScreen != null && this.getHoverState(this.hovered) == 2) {
+          GuiUtils.drawHoveringText(ImmutableList.of(this.type.getName()), mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height, MAX_TOOLTIP_TEXT_WIDTH, mc.fontRenderer);
+        }
+      }
+    }
   }
 }

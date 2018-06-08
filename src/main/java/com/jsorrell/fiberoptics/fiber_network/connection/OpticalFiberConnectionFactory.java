@@ -5,12 +5,15 @@ import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
+@SideOnly(Side.CLIENT)
 public class OpticalFiberConnectionFactory {
   public final BlockPos pos;
   public final EnumFacing side;
@@ -78,7 +81,7 @@ public class OpticalFiberConnectionFactory {
     DIRECTION("direction"),
     CHANNEL("channel"),
     PRIORITY("priority"),
-    TRANSFER_TYPE("transfer_type");
+    TRANSFER_TYPE("config");
 
     private final String name;
 
@@ -92,7 +95,7 @@ public class OpticalFiberConnectionFactory {
     }
   }
 
-  public class NonDefiningConnectionException extends Exception {
+  public static class NonDefiningConnectionException extends Exception {
     public final ImmutableList<ConnectionInfoType> missingInfo;
 
     NonDefiningConnectionException(Collection<ConnectionInfoType> missingInfo) {

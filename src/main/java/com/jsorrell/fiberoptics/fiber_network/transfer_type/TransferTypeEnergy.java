@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
 import com.jsorrell.fiberoptics.FiberOptics;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -9,6 +10,7 @@ import net.minecraft.client.model.TextureOffset;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
@@ -72,5 +74,15 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   @SideOnly(Side.CLIENT)
   public void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
     ICON_TEXTURE.drawTexturePart(mc, 0, 0, zLevel);
+  }
+
+  @Override
+  public void displayCreateConnectionGui(Minecraft mc, BlockPos pos, EnumFacing side) {
+    //TODO implement
+  }
+
+  @Override
+  public void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection) {
+    //TODO implement
   }
 }

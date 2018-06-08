@@ -63,7 +63,7 @@ public abstract class OpticalFiberConnection {
     int posZ = compound.getInteger("z");
     this.pos = new BlockPos(posX, posY, posZ).toImmutable();
     this.connectedSide = EnumFacing.getFront(compound.getInteger("connectedSide"));
-    this.transferType = ModTransferTypes.fromUnlocalizedName(compound.getString("transfer_type"));
+    this.transferType = ModTransferTypes.fromUnlocalizedName(compound.getString("config"));
     this.channelName = compound.getString("channel");
   }
 
@@ -131,7 +131,7 @@ public abstract class OpticalFiberConnection {
     compound.setInteger("y", this.pos.getY());
     compound.setInteger("z", this.pos.getZ());
     compound.setInteger("connectedSide", this.connectedSide.getIndex());
-    compound.setString("transfer_type", this.transferType.getUnlocalizedName());
+    compound.setString("config", this.transferType.getUnlocalizedName());
     compound.setString("channel", this.channelName);
     return compound;
   }

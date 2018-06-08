@@ -1,12 +1,14 @@
 package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
+import com.jsorrell.fiberoptics.client.gui.optical_fiber.config.GuiScreenConfig;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -38,7 +40,7 @@ public abstract class TransferType<T> {
   public abstract String getUnlocalizedName();
 
   public String getName() {
-    return I18n.format("transfer_type." + getUnlocalizedName() + ".name");
+    return I18n.format("config." + getUnlocalizedName() + ".name");
   }
 
   @Override
@@ -65,4 +67,10 @@ public abstract class TransferType<T> {
    */
   @SideOnly(Side.CLIENT)
   public abstract void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks);
+
+  @SideOnly(Side.CLIENT)
+  public abstract void displayCreateConnectionGui(Minecraft mc, BlockPos pos, EnumFacing side);
+
+  @SideOnly(Side.CLIENT)
+  public abstract void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection);
 }

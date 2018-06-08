@@ -1,5 +1,6 @@
 package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -7,6 +8,8 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -64,5 +67,15 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
     RenderItem renderItem = mc.getRenderItem();
     renderItem.zLevel = zLevel;
     renderItem.renderItemIntoGUI(new ItemStack(ICON_ITEM), 0, 0);
+  }
+
+  @Override
+  public void displayCreateConnectionGui(Minecraft mc, BlockPos pos, EnumFacing side) {
+    //TODO implement
+  }
+
+  @Override
+  public void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection) {
+    //TODO implement
   }
 }

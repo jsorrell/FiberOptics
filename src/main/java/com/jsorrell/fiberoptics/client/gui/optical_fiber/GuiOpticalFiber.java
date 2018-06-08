@@ -1,15 +1,27 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
+import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.model.TextureOffset;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
-import javax.annotation.PropertyKey;
 import java.awt.*;
 import java.io.IOException;
 
 public abstract class GuiOpticalFiber extends GuiScreen {
+  protected static final SizedTexturePart EMPTY_BACKGROUND;
+
+  static {
+    ResourceLocation bgLocation = new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png");
+    TextureOffset offset = new TextureOffset(0, 0);
+    Dimension size = new Dimension(206, 195);
+
+    EMPTY_BACKGROUND = new SizedTexturePart(bgLocation, offset, size);
+  }
+
   protected final BlockPos pos;
   protected Point backgroundStart;
 
@@ -19,7 +31,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
 
   @Nullable
   public SizedTexturePart getBackgroundTexture() {
-    return null;
+    return EMPTY_BACKGROUND;
   }
 
   @Override

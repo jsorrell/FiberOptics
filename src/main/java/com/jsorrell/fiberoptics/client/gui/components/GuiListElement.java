@@ -1,4 +1,4 @@
-package com.jsorrell.fiberoptics.client.gui.optical_fiber;
+package com.jsorrell.fiberoptics.client.gui.components;
 
 import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;

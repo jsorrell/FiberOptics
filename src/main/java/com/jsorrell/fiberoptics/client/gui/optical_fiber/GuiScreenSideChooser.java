@@ -15,13 +15,13 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiSideChooser extends GuiOpticalFiber {
+public class GuiScreenSideChooser extends GuiOpticalFiber {
   protected static final SizedTexturePart BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
   private static final int SIDE_BUTTON_HEIGHT = 20;
   private static final int SIDE_BUTTON_WIDTH = 200;
   public final List<GuiButton> sideButtons = new ArrayList<>(7);
 
-  public GuiSideChooser(BlockPos pos) {
+  public GuiScreenSideChooser(BlockPos pos) {
     super(pos);
   }
 
