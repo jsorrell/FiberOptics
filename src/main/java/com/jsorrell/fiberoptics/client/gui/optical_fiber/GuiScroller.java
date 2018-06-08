@@ -40,7 +40,7 @@ public class GuiScroller extends Gui {
 
     SizedTexturePart texture = locked ? this.lockedTexture : this.texture;
     Point scrollerPos = getScrollerPos();
-    texture.drawTexturePart(mc, this, scrollerPos.x, scrollerPos.y);
+    texture.drawTexturePart(mc, scrollerPos.x, scrollerPos.y, this.zLevel);
     GlStateManager.enableDepth();
   }
 

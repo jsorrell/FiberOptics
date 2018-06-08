@@ -61,15 +61,15 @@ public class GuiConnectionListElement extends GuiListElement {
     GlStateManager.color(1F, 1F, 1F, 1F);
     /* Type Icon */
     GlStateManager.clear(256);
-    this.connection.transferType.renderItemToGui(mc, this, x + TYPE_ICON_X, y + TYPE_ICON_Y, partialTicks);
+    this.connection.transferType.drawTypeIcon(mc, x + TYPE_ICON_X, y + TYPE_ICON_Y, this.zLevel, partialTicks);
     GlStateManager.clear(256);
 
     GlStateManager.color(1F, 1F, 1F, 1F);
     /* Direction Icon */
     if (this.connection.getTransferDirection() == OpticalFiberConnection.TransferDirection.INPUT) {
-      INPUT_ICON.drawTexturePart(mc, this, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y);
+      INPUT_ICON.drawTexturePart(mc,x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
     } else {
-      OUTPUT_ICON.drawTexturePart(mc, this, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y);
+      OUTPUT_ICON.drawTexturePart(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
     }
 
     /* Channel Name */

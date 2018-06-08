@@ -1,15 +1,13 @@
 package com.jsorrell.fiberoptics.fiber_network.transfer_type;
 
-import com.jsorrell.fiberoptics.util.TexturePart;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.model.TextureOffset;
-import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -57,7 +55,9 @@ public class TransferTypeFluids extends TransferType<IFluidHandler> {
 
   @Override
   @SideOnly(Side.CLIENT)
-  public void renderItemToGui(Minecraft mc, Gui gui, int x, int y, float partialTicks) {
-    mc.getRenderItem().renderItemIntoGUI(new ItemStack(ICON_ITEM), x, y);
+  public void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+    RenderItem renderItem = mc.getRenderItem();
+    renderItem.zLevel = zLevel;
+    renderItem.renderItemIntoGUI(new ItemStack(ICON_ITEM), 0, 0);
   }
 }

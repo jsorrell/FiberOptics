@@ -163,7 +163,7 @@ public class GuiConnectionChooser extends GuiOpticalFiber {
 
     /* Background */
     this.drawBackground();
-    BACKGROUND.drawTexturePart(this.mc, this, backgroundStart.x, backgroundStart.y);
+    BACKGROUND.drawTexturePart(this.mc, backgroundStart.x, backgroundStart.y, this.zLevel);
 
     /* Scrollbar */
     if (this.scroller != null) {

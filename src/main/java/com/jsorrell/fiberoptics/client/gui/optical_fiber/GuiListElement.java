@@ -30,6 +30,6 @@ public class GuiListElement extends Gui {
 
   public void drawListElement(Minecraft mc, int mouseX, int mouseY, int x, int y, float partialTicks) {
     GlStateManager.color(1F, 1F, 1F, 1F);
-    TEXTURE.drawTexturePart(mc, this, x, y);
+    TEXTURE.drawTexturePart(mc, x, y, this.zLevel);
   }
 }

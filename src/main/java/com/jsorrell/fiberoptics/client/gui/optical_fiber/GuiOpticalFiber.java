@@ -40,7 +40,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
   public void drawBackground() {
     SizedTexturePart background;
     if ((background = getBackgroundTexture()) != null) {
-      background.drawTexturePart(this.mc, this, backgroundStart.x, backgroundStart.y);
+      background.drawTexturePart(this.mc, backgroundStart.x, backgroundStart.y, this.zLevel);
     }
   }
 

@@ -70,7 +70,7 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
 
   @Override
   @SideOnly(Side.CLIENT)
-  public void renderItemToGui(Minecraft mc, Gui gui, int x, int y, float partialTicks) {
-    ICON_TEXTURE.drawTexturePart(mc, gui, x, y);
+  public void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+    ICON_TEXTURE.drawTexturePart(mc, 0, 0, zLevel);
   }
 }
