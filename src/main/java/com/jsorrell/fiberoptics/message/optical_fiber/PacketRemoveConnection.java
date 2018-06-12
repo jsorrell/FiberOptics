@@ -19,12 +19,12 @@ public class PacketRemoveConnection implements IMessage {
 
   @Override
   public void toBytes(ByteBuf buf) {
-    this.connection.toKeyedBytes(buf);
+    this.connection.toBytes(buf);
   }
 
   @Override
   public void fromBytes(ByteBuf buf) {
-    this.connection = OpticalFiberConnection.fromKeyedBytes(buf);
+    this.connection = OpticalFiberConnection.fromBytes(buf);
   }
 
   // Sever side

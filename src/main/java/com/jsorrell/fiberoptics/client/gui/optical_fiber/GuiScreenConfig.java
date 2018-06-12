@@ -1,33 +1,31 @@
-package com.jsorrell.fiberoptics.client.gui.optical_fiber.config;
+package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
 import com.jsorrell.fiberoptics.FiberOptics;
-import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiOpticalFiber;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionFactory;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.model.TextureOffset;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.awt.*;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class GuiScreenConfig extends GuiOpticalFiber {
   protected static final SizedTexturePart BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/empty_background.png"), new TextureOffset(0, 0), new Dimension(206, 195));
 
-  protected OpticalFiberConnection connection;
+  protected OpticalFiberConnectionFactory connectionFactory;
 
   public GuiScreenConfig(BlockPos pos, EnumFacing side) {
-    super(pos);
   }
 
   public GuiScreenConfig(OpticalFiberConnection connection) {
-    super(connection.pos);
+//    this.connectionFactory = new OpticalFiberConnectionFactory(connection);
   }
 
   @Nullable
@@ -47,6 +45,4 @@ public abstract class GuiScreenConfig extends GuiOpticalFiber {
   protected final void onSubmit(OpticalFiberConnection connection) {
 
   }
-
-
 }

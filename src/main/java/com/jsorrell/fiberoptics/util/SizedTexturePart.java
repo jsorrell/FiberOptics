@@ -7,8 +7,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import java.awt.*;
+import org.lwjgl.util.Dimension;
 
 @SideOnly(Side.CLIENT)
 public class SizedTexturePart extends TexturePart {
@@ -33,6 +32,6 @@ public class SizedTexturePart extends TexturePart {
   public void drawTexturePart(Minecraft mc, int x, int y, float zLevel) {
     Preconditions.checkNotNull(mc);
     mc.renderEngine.bindTexture(this.texture);
-    GuiUtils.drawTexturedModalRect(x, y, offset.textureOffsetX, offset.textureOffsetY, size.width, size.height, zLevel);
+    GuiUtils.drawTexturedModalRect(x, y, offset.textureOffsetX, offset.textureOffsetY, size.getWidth(), size.getHeight(), zLevel);
   }
 }

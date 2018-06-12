@@ -2,16 +2,16 @@ package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
-import com.jsorrell.fiberoptics.message.optical_fiber.PacketSetSide;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenConnectionChooser;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.model.TextureOffset;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +21,10 @@ public class GuiScreenSideChooser extends GuiOpticalFiber {
   private static final int SIDE_BUTTON_WIDTH = 200;
   public final List<GuiButton> sideButtons = new ArrayList<>(7);
 
+  protected final BlockPos pos;
+
   public GuiScreenSideChooser(BlockPos pos) {
-    super(pos);
+    this.pos = pos;
   }
 
   // TODO maybe do this ender io style of showing connected stuff rather than having to choose North or East or whatever.
@@ -37,7 +39,7 @@ public class GuiScreenSideChooser extends GuiOpticalFiber {
   public void initGui() {
     super.initGui();
 
-    int buttonYStart = this.backgroundStart.y + (BACKGROUND.size.height-7*SIDE_BUTTON_HEIGHT)/2;
+    int buttonYStart = this.backgroundStart.getY() + (BACKGROUND.size.getHeight()-7*SIDE_BUTTON_HEIGHT)/2;
     for (int i = 0; i < 6; ++i) {
       String buttonText = EnumFacing.getFront(i).getName();
       this.sideButtons.add(new GuiButton(i, width/2 - SIDE_BUTTON_WIDTH/2, buttonYStart + i*SIDE_BUTTON_HEIGHT, SIDE_BUTTON_WIDTH, SIDE_BUTTON_HEIGHT, buttonText));
@@ -49,9 +51,9 @@ public class GuiScreenSideChooser extends GuiOpticalFiber {
   @Override
   protected void actionPerformed(GuiButton button) {
     if (0 <= button.id && button.id < 6) {
-      FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketSetSide(this.pos, EnumFacing.getFront(button.id)));
+      FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketOpenConnectionChooser.Request(this.pos, EnumFacing.getFront(button.id)));
     } else {
-      FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketSetSide(this.pos, null));
+      FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketOpenConnectionChooser.Request(this.pos, null));
     }
   }
 }

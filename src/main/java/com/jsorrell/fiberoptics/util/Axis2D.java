@@ -1,6 +1,8 @@
 package com.jsorrell.fiberoptics.util;
 
-import java.awt.*;
+import org.lwjgl.util.Dimension;
+import org.lwjgl.util.Point;
+
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 
@@ -38,11 +40,11 @@ public enum Axis2D {
     return getRelevantCoordinate(p.getX(), p.getY());
   }
   public int getRelevantCoordinate(Point p) {
-    return getRelevantCoordinate(p.x, p.y);
+    return getRelevantCoordinate(p.getX(), p.getY());
   }
   public abstract double getRelevantSize(Dimension2D dim);
   public int getRelevantSize(Dimension dim) {
-    return (int) getRelevantSize((Dimension2D) dim);
+    return (int) getRelevantSize(new java.awt.Dimension(dim.getWidth(), dim.getHeight()));
   }
   public abstract double getRelevantCoordinate(double x, double y);
   public int getRelevantCoordinate(int x, int y) {

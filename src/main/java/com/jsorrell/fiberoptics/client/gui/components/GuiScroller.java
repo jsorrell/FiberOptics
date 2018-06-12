@@ -8,8 +8,10 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.util.Dimension;
+import org.lwjgl.util.Point;
+import org.lwjgl.util.Rectangle;
 
-import java.awt.*;
 
 public class GuiScroller extends Gui {
   public final int id;
@@ -40,7 +42,7 @@ public class GuiScroller extends Gui {
 
     SizedTexturePart texture = locked ? this.lockedTexture : this.texture;
     Point scrollerPos = getScrollerPos();
-    texture.drawTexturePart(mc, scrollerPos.x, scrollerPos.y, this.zLevel);
+    texture.drawTexturePart(mc, scrollerPos.getX(), scrollerPos.getY(), this.zLevel);
     GlStateManager.enableDepth();
   }
 
@@ -49,8 +51,8 @@ public class GuiScroller extends Gui {
    * @return the point representing the position of the scroller.
    */
   private Point getScrollerPos() {
-    int xPos = this.scrollStart.x + this.scrollDirection.x * scrollPosition;
-    int yPos = this.scrollStart.y + this.scrollDirection.y * scrollPosition;
+    int xPos = this.scrollStart.getX() + this.scrollDirection.x * scrollPosition;
+    int yPos = this.scrollStart.getY() + this.scrollDirection.y * scrollPosition;
     return new Point(xPos, yPos);
   }
 

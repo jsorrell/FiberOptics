@@ -1,12 +1,13 @@
-package com.jsorrell.fiberoptics.fiber_network.transfer_type;
+package com.jsorrell.fiberoptics.fiber_network.type;
 
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
+import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.model.TextureOffset;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -16,15 +17,21 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.awt.*;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   private static final SizedTexturePart ICON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(0, 43), new Dimension(16,16));
+
+  @Override
+  public void registerConnections() {
+    this.registerConnection(EnergyInput.class, new ResourceLocation(FiberOptics.MODID, "input"));
+    this.registerConnection(EnergyOutput.class, new ResourceLocation(FiberOptics.MODID, "output"));
+  }
 
   @Override
   public Capability<IEnergyStorage> getCapability() {
@@ -84,5 +91,43 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
   @Override
   public void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection) {
     //TODO implement
+  }
+
+  public static class EnergyInput extends OpticalFiberConnection {
+    public EnergyInput(BlockPos pos, EnumFacing side, String channelName) {
+      super(pos, side, channelName);
+    }
+
+    public EnergyInput(ByteBuf buf) {
+      super(buf);
+    }
+
+    public EnergyInput(NBTTagCompound compound) {
+      super(compound);
+    }
+
+    @Override
+    public TransferType getTransferType() {
+      return ModTransferTypes.energyType;
+    }
+  }
+
+  public static class EnergyOutput extends OpticalFiberConnection {
+    public EnergyOutput(BlockPos pos, EnumFacing side, String channelName) {
+      super(pos, side, channelName);
+    }
+
+    public EnergyOutput(ByteBuf buf) {
+      super(buf);
+    }
+
+    public EnergyOutput(NBTTagCompound compound) {
+      super(compound);
+    }
+
+    @Override
+    public TransferType getTransferType() {
+      return ModTransferTypes.energyType;
+    }
   }
 }

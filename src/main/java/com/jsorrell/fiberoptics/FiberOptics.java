@@ -1,6 +1,7 @@
 package com.jsorrell.fiberoptics;
 
 import com.jsorrell.fiberoptics.block.ModBlocks;
+import com.jsorrell.fiberoptics.fiber_network.type.ModTransferTypes;
 import com.jsorrell.fiberoptics.item.ModItems;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import net.minecraft.block.Block;
@@ -36,12 +37,14 @@ public class FiberOptics {
   @SuppressWarnings("unused")
   public void preInit(FMLPreInitializationEvent e) {
     NetworkRegistry.INSTANCE.registerGuiHandler(this, new FiberOpticsGuiHandler());
+
   }
 
   @Mod.EventHandler
   @SuppressWarnings("unused")
   public void init(FMLInitializationEvent e) {
     FiberOpticsPacketHandler.registerPacketHandlers();
+    ModTransferTypes.registerTransferTypes();
   }
 
   @Mod.EventHandler

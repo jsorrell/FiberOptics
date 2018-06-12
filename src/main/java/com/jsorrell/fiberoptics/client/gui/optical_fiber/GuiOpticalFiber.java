@@ -5,10 +5,10 @@ import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.model.TextureOffset;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import org.lwjgl.util.Dimension;
+import org.lwjgl.util.Point;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.io.IOException;
 
 public abstract class GuiOpticalFiber extends GuiScreen {
@@ -22,12 +22,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
     EMPTY_BACKGROUND = new SizedTexturePart(bgLocation, offset, size);
   }
 
-  protected final BlockPos pos;
   protected Point backgroundStart;
-
-  public GuiOpticalFiber(BlockPos pos) {
-    this.pos = pos.toImmutable();
-  }
 
   @Nullable
   public SizedTexturePart getBackgroundTexture() {
@@ -38,7 +33,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
   public void initGui() {
     SizedTexturePart background;
     if ((background = getBackgroundTexture()) != null) {
-      this.backgroundStart = new Point((this.width - background.size.width)/2, (this.height - background.size.height)/2);
+      this.backgroundStart = new Point((this.width - background.size.getWidth())/2, (this.height - background.size.getHeight())/2);
     }
   }
 
@@ -57,7 +52,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
   public void drawBackground() {
     SizedTexturePart background;
     if ((background = getBackgroundTexture()) != null) {
-      background.drawTexturePart(this.mc, backgroundStart.x, backgroundStart.y, this.zLevel);
+      background.drawTexturePart(this.mc, backgroundStart.getX(), backgroundStart.getY(), this.zLevel);
     }
   }
 

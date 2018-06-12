@@ -18,6 +18,7 @@ public class PacketCreateConnection implements IMessage {
   private OpticalFiberConnection connection;
   private OpticalFiberConnection connectionToReplace;
 
+  @SuppressWarnings("unused")
   public PacketCreateConnection(OpticalFiberConnection connection) {
     this(connection, null);
   }
@@ -30,19 +31,19 @@ public class PacketCreateConnection implements IMessage {
 
   @Override
   public void toBytes(ByteBuf buf) {
-    connection.toKeyedBytes(buf);
+    connection.toBytes(buf);
 
     buf.writeBoolean(connectionToReplace != null);
     if (connectionToReplace != null) {
-      connectionToReplace.toKeyedBytes(buf);
+      connectionToReplace.toBytes(buf);
     }
   }
 
   @Override
   public void fromBytes(ByteBuf buf) {
-    this.connection = OpticalFiberConnection.fromKeyedBytes(buf);
+    this.connection = OpticalFiberConnection.fromBytes(buf);
     if (buf.readBoolean()) {
-      this.connectionToReplace = OpticalFiberConnection.fromKeyedBytes(buf);
+      this.connectionToReplace = OpticalFiberConnection.fromBytes(buf);
     }
   }
 

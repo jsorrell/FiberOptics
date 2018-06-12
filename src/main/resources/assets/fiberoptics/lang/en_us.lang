@@ -19,10 +19,8 @@ enumFacing.west.name=West
 enumFacing.east.name=East
 
 # Transfer Types
-transfer_type.items.name=Items
-transfer_type.forge_fluids.name=Fluids
-transfer_type.forge_energy.name=Forge Energy
+transferType.items.name=Items
+transferType.forge_fluids.name=Fluids
+transferType.forge_energy.name=Forge Energy
 
 # Transfer Directions
-transfer_direction.extract.name=Extract
-transfer_direction.insert.name=Insert

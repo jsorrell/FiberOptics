@@ -1,17 +1,20 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
 import com.google.common.collect.ImmutableList;
-import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
+import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
+import com.jsorrell.fiberoptics.fiber_network.type.TransferTypeItems;
+import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketCreateConnection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.client.config.GuiUtils;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nonnull;
 import javax.vecmath.Point2d;
-import java.awt.*;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -28,11 +31,15 @@ public class GuiScreenTypeChooser extends GuiOpticalFiber {
   private static final int[] BUTTON_SIZES = { 96, 40, 32, 32, 28 };
 
   private final ImmutableList<TransferType> types;
-  protected final EnumFacing side;
 
-  public GuiScreenTypeChooser(BlockPos pos, EnumFacing side, Collection<TransferType> types) {
-    super(pos);
+  protected final BlockPos pos;
+  protected final EnumFacing side;
+  protected final String channel;
+
+  public GuiScreenTypeChooser(BlockPos pos, EnumFacing side, String channel, Collection<TransferType> types) {
+    this.pos = pos;
     this.side = side;
+    this.channel = channel;
     this.types = ImmutableList.copyOf(types);
   }
 
@@ -42,8 +49,8 @@ public class GuiScreenTypeChooser extends GuiOpticalFiber {
     int size = BUTTON_SIZES[this.types.size()-1];
     for (int i = 0; i < this.types.size(); ++i) {
       Point2d pos = BUTTON_POSITIONS[this.types.size()-1][i];
-      int x = this.backgroundStart.x + (int)Math.round(pos.x * EMPTY_BACKGROUND.size.width - size/2D);
-      int y = this.backgroundStart.y + (int)Math.round(pos.y * EMPTY_BACKGROUND.size.height - size/2D);
+      int x = this.backgroundStart.getX() + (int)Math.round(pos.x * EMPTY_BACKGROUND.size.getWidth() - size/2D);
+      int y = this.backgroundStart.getY() + (int)Math.round(pos.y * EMPTY_BACKGROUND.size.getHeight() - size/2D);
       GuiTypeButton button = new GuiTypeButton(i, x, y, new Dimension(size, size), this.types.get(i));
       this.buttonList.add(button);
     }
@@ -63,7 +70,8 @@ public class GuiScreenTypeChooser extends GuiOpticalFiber {
   protected void actionPerformed(GuiButton button) throws IOException {
     if (0 <= button.id && button.id < this.types.size()) {
       TransferType type = this.types.get(button.id);
-      type.displayCreateConnectionGui(this.mc, this.pos, this.side);
+//      type.displayCreateConnectionGui(this.mc, this.pos, this.side);
+      FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketCreateConnection(TransferTypeItems.createTestInput(this.pos, this.side, this.channel)));
     }
     super.actionPerformed(button);
   }
@@ -75,7 +83,7 @@ public class GuiScreenTypeChooser extends GuiOpticalFiber {
     public final TransferType type;
 
     public GuiTypeButton(int id, int x, int y, Dimension size, TransferType type) {
-      super(id, x, y, size.width, size.height, "");
+      super(id, x, y, size.getWidth(), size.getHeight(), "");
       this.type = type;
       this.size = size;
     }

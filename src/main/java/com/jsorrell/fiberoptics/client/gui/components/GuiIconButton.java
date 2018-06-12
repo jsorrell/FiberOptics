@@ -5,9 +5,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.fml.client.config.GuiUtils;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nonnull;
-import java.awt.Dimension;
 import java.util.List;
 
 public class GuiIconButton extends GuiButton {
@@ -18,7 +18,7 @@ public class GuiIconButton extends GuiButton {
   public List<String> tooltip = null;
 
   public GuiIconButton(int id, int x, int y, Dimension size, SizedTexturePart icon) {
-    super(id, x, y, size.width, size.height, "");
+    super(id, x, y, size.getWidth(), size.getHeight(), "");
     this.size = size;
     this.icon = icon;
   }
@@ -31,7 +31,8 @@ public class GuiIconButton extends GuiButton {
       GlStateManager.disableLighting();
       GlStateManager.pushMatrix();
       GlStateManager.translate(x, y, 0);
-      GlStateManager.scale((double)size.width / (double)icon.size.width, (double)size.height / (double)icon.size.height, 1);
+      double scale = (double)size.getWidth() / (double)icon.size.getWidth();
+      GlStateManager.scale(scale, scale, 1);
       icon.drawTexturePart(mc, 0, 0, this.zLevel);
       GlStateManager.popMatrix();
     }

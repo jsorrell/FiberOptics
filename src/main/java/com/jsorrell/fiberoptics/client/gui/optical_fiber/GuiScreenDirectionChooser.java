@@ -1,19 +1,16 @@
 package com.jsorrell.fiberoptics.client.gui.optical_fiber;
 
-import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.client.gui.components.GuiIconButton;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionFactory;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.model.TextureOffset;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 
 //FIXME this is unused and broken. Use this within connections
 public class GuiScreenDirectionChooser extends GuiOpticalFiber {
@@ -25,7 +22,6 @@ public class GuiScreenDirectionChooser extends GuiOpticalFiber {
   private static final int INSERT_BUTTON_ID = 1;
 
   public GuiScreenDirectionChooser(BlockPos pos, EnumFacing side) {
-    super(pos);
   }
 
   @Nullable
@@ -39,13 +35,13 @@ public class GuiScreenDirectionChooser extends GuiOpticalFiber {
     super.initGui();
 
     /* Input */
-    GuiIconButton inputButton = new GuiIconButton(EXTRACT_BUTTON_ID, (int)Math.round(this.backgroundStart.x + BACKGROUND.size.width/4D - BUTTON_SIZE.width/2D), (int)Math.round(this.backgroundStart.y + BACKGROUND.size.height/2D - BUTTON_SIZE.height/2D), BUTTON_SIZE, EXTRACT_ICON);
-    inputButton.tooltip = ImmutableList.of(OpticalFiberConnection.TransferDirection.EXTRACT.getName());
+    GuiIconButton inputButton = new GuiIconButton(EXTRACT_BUTTON_ID, (int)Math.round(this.backgroundStart.getX() + BACKGROUND.size.getWidth()/4D - BUTTON_SIZE.getWidth()/2D), (int)Math.round(this.backgroundStart.getY() + BACKGROUND.size.getHeight()/2D - BUTTON_SIZE.getHeight()/2D), BUTTON_SIZE, EXTRACT_ICON);
+//    inputButton.tooltip = ImmutableList.of(OpticalFiberConnection.TransferDirection.EXTRACT.getName());
     this.buttonList.add(inputButton);
 
     /* Output */
-    GuiIconButton outputButton = new GuiIconButton(INSERT_BUTTON_ID, (int)Math.round(this.backgroundStart.x + 3*BACKGROUND.size.width/4D - BUTTON_SIZE.width/2D), (int)Math.round(this.backgroundStart.y + BACKGROUND.size.height/2D - BUTTON_SIZE.height/2D), BUTTON_SIZE, INSERT_ICON);
-    outputButton.tooltip = ImmutableList.of(OpticalFiberConnection.TransferDirection.INSERT.getName());
+    GuiIconButton outputButton = new GuiIconButton(INSERT_BUTTON_ID, (int)Math.round(this.backgroundStart.getX() + 3*BACKGROUND.size.getWidth()/4D - BUTTON_SIZE.getWidth()/2D), (int)Math.round(this.backgroundStart.getY() + BACKGROUND.size.getHeight()/2D - BUTTON_SIZE.getHeight()/2D), BUTTON_SIZE, INSERT_ICON);
+//    outputButton.tooltip = ImmutableList.of(OpticalFiberConnection.TransferDirection.INSERT.getName());
     this.buttonList.add(outputButton);
   }
 

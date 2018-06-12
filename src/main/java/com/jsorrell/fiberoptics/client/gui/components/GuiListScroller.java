@@ -1,12 +1,11 @@
 package com.jsorrell.fiberoptics.client.gui.components;
 
-import com.jsorrell.fiberoptics.client.gui.components.GuiScroller;
 import com.jsorrell.fiberoptics.util.AADirection2D;
 import com.jsorrell.fiberoptics.util.TexturePart;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.util.Dimension;
 
-import java.awt.*;
 
 public class GuiListScroller extends GuiScroller {
   private int listSize;
@@ -52,7 +51,7 @@ public class GuiListScroller extends GuiScroller {
 
     int oldScrollPositionIndex = this.getListScrollPosition();
     this.scrollTo(pos);
-    return oldScrollPositionIndex != pos;
+    return oldScrollPositionIndex != this.getListScrollPosition();
   }
 
   /**

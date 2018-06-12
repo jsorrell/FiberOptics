@@ -1,140 +1,184 @@
 package com.jsorrell.fiberoptics.fiber_network.connection;
 
-import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.fiber_network.transfer_type.ModTransferTypes;
-import com.jsorrell.fiberoptics.fiber_network.transfer_type.TransferType;
-import com.jsorrell.fiberoptics.util.Util;
+import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
+import com.jsorrell.fiberoptics.message.optical_fiber.SerializeUtils;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.resources.I18n;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Comparator;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.concurrent.Immutable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
-/**
- * Immutable
- */
-public abstract class OpticalFiberConnection {
+@Immutable
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+public abstract class OpticalFiberConnection implements Comparable<OpticalFiberConnection> {
   public final BlockPos pos;
-  public final EnumFacing connectedSide;
-  public final TransferType transferType;
+  public final EnumFacing side;
   public final String channelName;
-  public static Comparator<OpticalFiberConnection> COMPARATOR = (t0, t1) -> {
-    int cmp;
-    // Provide consistency with equals
-    cmp = t0.pos.compareTo(t1.pos);
-    if (cmp != 0) return cmp;
-    cmp = t0.connectedSide.compareTo(t1.connectedSide);
-    if (cmp != 0) return cmp;
-    cmp = Integer.compare(ModTransferTypes.getIndex(t0.transferType), ModTransferTypes.getIndex(t1.transferType));
-    if (cmp != 0) return cmp;
-    cmp = t0.channelName.compareTo(t1.channelName);
-    return cmp;
-  };
 
-  public OpticalFiberConnection(@Nonnull BlockPos pos, @Nonnull EnumFacing connectedSide, @Nonnull TransferType transferType, @Nonnull String channelName) {
+  public OpticalFiberConnection(BlockPos pos, EnumFacing side, String channelName) {
     this.pos = pos.toImmutable();
-    this.connectedSide = connectedSide;
-    this.transferType = transferType;
+    this.side = side;
     this.channelName = channelName;
   }
 
   public OpticalFiberConnection(ByteBuf buf) {
-    int posX = buf.readInt();
-    int posY = buf.readInt();
-    int posZ = buf.readInt();
-    this.pos = new BlockPos(posX, posY, posZ).toImmutable();
-    this.connectedSide = EnumFacing.getFront(buf.readInt());
-    this.transferType = ModTransferTypes.fromIndex(buf.readInt());
-    this.channelName = ByteBufUtils.readUTF8String(buf);
+    this(BlockPos.fromLong(buf.readLong()), EnumFacing.getFront(buf.readByte()), ByteBufUtils.readUTF8String(buf));
   }
 
   public OpticalFiberConnection(NBTTagCompound compound) {
-    int posX = compound.getInteger("x");
-    int posY = compound.getInteger("y");
-    int posZ = compound.getInteger("z");
-    this.pos = new BlockPos(posX, posY, posZ).toImmutable();
-    this.connectedSide = EnumFacing.getFront(compound.getInteger("connectedSide"));
-    this.transferType = ModTransferTypes.fromUnlocalizedName(compound.getString("config"));
-    this.channelName = compound.getString("channel");
+    this(new BlockPos(compound.getInteger("x"), compound.getInteger("y"), compound.getInteger("z")), EnumFacing.getFront(compound.getInteger("Side")), compound.getString("ChannelName"));
   }
 
-  public enum TransferDirection {
-    EXTRACT("extract"), // Extract from tile entity into network
-    INSERT("insert"); // Insert into tile entity from network
-    private final String unlocalizedName;
-
-    TransferDirection(String unlocalizedName) {
-      this.unlocalizedName = unlocalizedName;
-    }
-
-    public String getUnlocalizedName() {
-      return this.unlocalizedName;
-    }
-
-    public String getName() {
-      return I18n.format("transfer_direction." + getUnlocalizedName() + ".name");
+  public static OpticalFiberConnection fromBytes(ByteBuf buf) {
+    TransferType<?> type = TransferType.getTypeFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
+    Class<? extends OpticalFiberConnection> connectionType = type.getConnectionFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
+    try {
+      Constructor<? extends OpticalFiberConnection> constructor = connectionType.getConstructor(ByteBuf.class);
+      return constructor.newInstance(buf);
+    } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException e) {
+      throw new RuntimeException("Connections must have a public constructor that takes a ByteBuf.");
+    } catch (InvocationTargetException e) {
+      throw new RuntimeException(e);
     }
   }
 
-  public static OpticalFiberConnection fromKeyedBytes(ByteBuf buf) {
-    int transferDirection = buf.readInt();
-    if (transferDirection == TransferDirection.EXTRACT.ordinal()) {
-      return new OpticalFiberInput(buf);
-    } else {
-      return new OpticalFiberOutput(buf);
+  public static class InvalidTypeKeyException extends Exception {
+    public InvalidTypeKeyException(ResourceLocation key) {
+      super("Invalid Transfer type \"" + key.toString() + "\".");
     }
   }
 
-  public TileEntity getConnectedTile(IBlockAccess worldIn) {
-    BlockPos connectedTilePos = this.pos.offset(this.connectedSide);
-    return worldIn.getTileEntity(connectedTilePos);
+  public static class InvalidConnectionKeyException extends Exception {
+    public final ResourceLocation typeKey;
+    public final ResourceLocation connectionKey;
+    public InvalidConnectionKeyException(ResourceLocation typeKey, ResourceLocation connectionKey) {
+      super("Invalid Connection Type \"" + connectionKey.toString() + "\" for Transfer Type \"" + typeKey.toString() + "\".");
+      this.typeKey = typeKey;
+      this.connectionKey = connectionKey;
+    }
+  }
+
+  public static OpticalFiberConnection fromNBT(NBTTagCompound compound) throws InvalidTypeKeyException, InvalidConnectionKeyException {
+    Class<? extends  OpticalFiberConnection> connectionClass;
+    try {
+      TransferType<?> transferType = TransferType.getTypeFromKey(new ResourceLocation(compound.getString("TransferType")));
+      connectionClass = transferType.getConnectionFromKey(new ResourceLocation(compound.getString("ConnectionType")));
+    } catch (TransferType.NoTypeForKeyException e) {
+      throw new InvalidTypeKeyException(e.key);
+    } catch (TransferType.NoConnectionForKeyException e) {
+      throw new InvalidConnectionKeyException(e.typeKey, e.connectionKey);
+    }
+
+    try {
+      Constructor<? extends OpticalFiberConnection> constructor = connectionClass.getConstructor(NBTTagCompound.class);
+      return constructor.newInstance(compound);
+    } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException e) {
+      throw new RuntimeException(connectionClass.getName() + " must have a public constructor that takes a NBTTagCompound.");
+    } catch (InvocationTargetException e) {
+      throw new RuntimeException(e.getCause());
+    }
+  }
+
+  public static NBTTagCompound serializeNBT(OpticalFiberConnection connection) {
+    NBTTagCompound compound = new NBTTagCompound();
+    compound.setString("TransferType", TransferType.getKeyFromType(connection.getTransferType()).toString());
+    compound.setString("ConnectionType", connection.getTransferType().getKeyFromConnection(connection.getClass()).toString());
+    NBTTagCompound pos = new NBTTagCompound();
+    compound.setTag("ConnectionPos", pos);
+    pos.setInteger("x", connection.pos.getX());
+    pos.setInteger("y", connection.pos.getY());
+    pos.setInteger("z", connection.pos.getZ());
+    compound.setInteger("Side", connection.side.getIndex());
+    compound.setString("ChannelName", connection.channelName);
+
+    NBTTagCompound connectionSpecificNBT = connection.serializeConnectionSpecificNBT();
+    if (connectionSpecificNBT != null) {
+      compound.setTag("ConnectionSpecific", connectionSpecificNBT);
+    }
+
+    return compound;
   }
 
   @Nullable
-  protected Object getCapabilityHandler(IBlockAccess worldIn) {
-    TileEntity connectedTile = worldIn.getTileEntity(pos.offset(this.connectedSide));
-    if (connectedTile == null) {
-      return null;
-    }
-    Capability<?> capability = this.transferType.getCapability();
-    return connectedTile.getCapability(capability, this.connectedSide.getOpposite());
+  protected static NBTTagCompound getConnectionSpecificNBT(NBTTagCompound compound) {
+    if (!compound.hasKey("ConnectionSpecific", Constants.NBT.TAG_COMPOUND)) return null;
+    return compound.getCompoundTag("ConnectionSpecific");
   }
 
-  public abstract TransferDirection getTransferDirection();
+//  public enum TransferDirection {
+//    EXTRACT("extract"), // Extract from tile entity into network
+//    INSERT("insert"); // Insert into tile entity from network
+//    private final String unlocalizedName;
+//
+//    TransferDirection(String unlocalizedName) {
+//      this.unlocalizedName = unlocalizedName;
+//    }
+//
+//    public String getUnlocalizedName() {
+//      return this.unlocalizedName;
+//    }
+//
+//    public String getName() {
+//      return I18n.format("transfer_direction." + getUnlocalizedName() + ".name");
+//    }
+//  }
 
+  @Nullable
+  protected NBTTagCompound serializeConnectionSpecificNBT() {
+    return null;
+  }
+
+  @OverridingMethodsMustInvokeSuper
   public void toBytes(ByteBuf buf) {
-    buf.writeInt(pos.getX());
-    buf.writeInt(pos.getY());
-    buf.writeInt(pos.getZ());
-    buf.writeInt(connectedSide.getIndex());
-    buf.writeInt(ModTransferTypes.getIndex(transferType));
-    ByteBufUtils.writeUTF8String(buf, channelName);
+    SerializeUtils.writeUTF8String(buf, TransferType.getKeyFromType(this.getTransferType()).toString());
+    SerializeUtils.writeUTF8String(buf, this.getTransferType().getKeyFromConnection(this.getClass()).toString());
+    buf.writeLong(this.pos.toLong());
+    buf.writeByte(this.side.getIndex());
+    SerializeUtils.writeUTF8String(buf, this.channelName);
   }
 
-  public void toKeyedBytes(ByteBuf buf) {
-    buf.writeInt(this.getTransferDirection().ordinal());
-    this.toBytes(buf);
+  @Nullable
+  public TileEntity getConnectedTile(IBlockAccess worldIn) {
+    BlockPos connectedTilePos = this.pos.offset(this.side);
+    return worldIn.getTileEntity(connectedTilePos);
   }
 
-  public NBTTagCompound serializeNBT() {
-    NBTTagCompound compound = new NBTTagCompound();
-    compound.setInteger("x", this.pos.getX());
-    compound.setInteger("y", this.pos.getY());
-    compound.setInteger("z", this.pos.getZ());
-    compound.setInteger("connectedSide", this.connectedSide.getIndex());
-    compound.setString("config", this.transferType.getUnlocalizedName());
-    compound.setString("channel", this.channelName);
-    return compound;
-  }
+//  @Nullable
+//  protected Object getCapabilityHandler(IBlockAccess worldIn) {
+//    TileEntity connectedTile = worldIn.getTileEntity(pos.offset(this.side));
+//    if (connectedTile == null) {
+//      return null;
+//    }
+//    Capability<?> capability = this.transferType.getCapability();
+//    return connectedTile.getCapability(capability, this.side.getOpposite());
+//  }
+
+  public abstract TransferType getTransferType();
+
+//  public NBTTagCompound serializeNBT() {
+//    NBTTagCompound compound = new NBTTagCompound();
+//    compound.setInteger("x", this.pos.getX());
+//    compound.setInteger("y", this.pos.getY());
+//    compound.setInteger("z", this.pos.getZ());
+//    compound.setInteger("side", this.side.getIndex());
+//    compound.setString("channel", this.channelName);
+//    return compound;
+//  }
+//
 
   @Override
   public boolean equals(Object o) {
@@ -142,22 +186,34 @@ public abstract class OpticalFiberConnection {
     if (!(o instanceof OpticalFiberConnection)) return false;
     OpticalFiberConnection that = (OpticalFiberConnection) o;
     return Objects.equals(pos, that.pos) &&
-            connectedSide == that.connectedSide &&
-            Objects.equals(transferType, that.transferType) &&
+            side == that.side &&
             Objects.equals(channelName, that.channelName);
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(pos, connectedSide, transferType, channelName);
+  @OverridingMethodsMustInvokeSuper
+  public int compareTo(OpticalFiberConnection connection) {
+    int cmp;
+    if ((cmp = this.pos.compareTo(connection.pos)) != 0) return cmp;
+    if ((cmp = this.side.compareTo(connection.side)) != 0) return cmp;
+    if ((cmp = this.channelName.compareTo(connection.channelName)) != 0) return cmp;
+    if ((cmp = this.getTransferType().compareTo(connection.getTransferType())) != 0) return cmp;
+    TransferType type = this.getTransferType();
+    if ((cmp = type.getKeyFromConnection(this.getClass()).compareTo(type.getKeyFromConnection(connection.getClass()))) != 0) return cmp;
+    return 0;
   }
 
-  /**
-   * Add the connection to the world.
-   * @param world the world.
-   * @return {@code true} iff the connection was successfully added.
-   */
-  public boolean initialize(IBlockAccess world) {
-    return Util.getTileChecked(world, this.pos, TileOpticalFiberBase.class).addConnection(this);
+  @Override
+  public int hashCode() {
+    return Objects.hash(pos, side, channelName);
   }
+
+//  /**
+//   * Add the connection to the world.
+//   * @param world the world.
+//   * @return {@code true} iff the connection was successfully added.
+//   */
+//  public boolean initialize(IBlockAccess world) {
+//    return Util.getTileChecked(world, this.pos, TileOpticalFiberBase.class).addConnection(this);
+//  }
 }

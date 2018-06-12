@@ -1,15 +1,17 @@
-package com.jsorrell.fiberoptics.fiber_network.transfer_type;
+package com.jsorrell.fiberoptics.fiber_network.type;
 
+import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
@@ -25,6 +27,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class TransferTypeFluids extends TransferType<IFluidHandler> {
   private static final Item ICON_ITEM = Items.WATER_BUCKET;
+
+  @Override
+  public void registerConnections() {
+    this.registerConnection(FluidInput.class, new ResourceLocation(FiberOptics.MODID, "input"));
+    this.registerConnection(FluidOutput.class, new ResourceLocation(FiberOptics.MODID, "output"));
+  }
 
   @Override
   public Capability<IFluidHandler> getCapability() {
@@ -72,5 +80,43 @@ public class TransferTypeFluids extends TransferType<IFluidHandler> {
   @Override
   public void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection) {
     //TODO implement
+  }
+
+  public static class FluidInput extends OpticalFiberConnection {
+    private FluidInput(BlockPos pos, EnumFacing side, String channelName) {
+      super(pos, side, channelName);
+    }
+
+    public FluidInput(ByteBuf buf) {
+      super(buf);
+    }
+
+    public FluidInput(NBTTagCompound compound) {
+      super(compound);
+    }
+
+    @Override
+    public TransferType getTransferType() {
+      return ModTransferTypes.fluidType;
+    }
+  }
+
+  public static class FluidOutput extends OpticalFiberConnection {
+    private FluidOutput(BlockPos pos, EnumFacing side, String channelName) {
+      super(pos, side, channelName);
+    }
+
+    public FluidOutput(ByteBuf buf) {
+      super(buf);
+    }
+
+    public FluidOutput(NBTTagCompound compound) {
+      super(compound);
+    }
+
+    @Override
+    public TransferType getTransferType() {
+      return ModTransferTypes.fluidType;
+    }
   }
 }

@@ -1,13 +1,14 @@
 package com.jsorrell.fiberoptics.block.optical_fiber;
 
 import com.google.common.collect.ImmutableList;
+import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberInput;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberOutput;
+import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
 import com.jsorrell.fiberoptics.util.Util;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -19,6 +20,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @MethodsReturnNonnullByDefault
@@ -55,7 +57,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     connectionTile.connections.add(connection);
     connectionTile.markDirty();
 
-    BlockOpticalFiber.setSideType(this.world, this.pos, connection.connectedSide, FiberSideType.CONNECTION);
+    BlockOpticalFiber.setSideType(this.world, this.pos, connection.side, FiberSideType.CONNECTION);
 
     return true;
   }
@@ -63,7 +65,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
   @Override
   public boolean replaceConnection(OpticalFiberConnection connection, OpticalFiberConnection connectionToReplace) {
 
-    if (connection.pos != connectionToReplace.pos || connection.connectedSide != connectionToReplace.connectedSide) {
+    if (connection.pos != connectionToReplace.pos || connection.side != connectionToReplace.side) {
       return false;
     }
 
@@ -88,18 +90,17 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
       this.markDirty();
 
       for (OpticalFiberConnection connection1 : this.connections) {
-        if (connection.connectedSide.equals(connection1.connectedSide)) {
+        if (connection.side.equals(connection1.side)) {
           // Another connection exists in this direction so don't update state
           return true;
         }
       }
 
-      BlockOpticalFiber.setSideType(this.world, this.pos, connection.connectedSide, FiberSideType.NONE);
+      BlockOpticalFiber.setSideType(this.world, this.pos, connection.side, FiberSideType.NONE);
       return true;
     }
     return false;
   }
-
 
   @Override
   public ImmutableList<OpticalFiberConnection> getConnections(@Nullable EnumFacing side) {
@@ -108,14 +109,14 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     if (side == null) {
       return ImmutableList.copyOf(this.connections);
     } else {
-      return ImmutableList.copyOf(this.connections.stream().filter(connection -> side.equals(connection.connectedSide)).collect(Collectors.toList()));
+      return ImmutableList.copyOf(this.connections.stream().filter(connection -> side.equals(connection.side)).collect(Collectors.toList()));
     }
   }
 
   @Override
   public boolean hasConnectionOnSide(EnumFacing side) {
     if (this.connections == null) return false;
-    return this.connections.stream().anyMatch(connection -> connection.connectedSide.equals(side));
+    return this.connections.stream().anyMatch(connection -> connection.side.equals(side));
   }
 
   /**
@@ -231,65 +232,64 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     return ret;
   }
 
-  private NBTTagCompound writeConnectionsToNBT(NBTTagCompound compound) {
-    NBTTagList inputs = new NBTTagList();
-    NBTTagList outputs = new NBTTagList();
-    if (this.connections != null) {
-      for (OpticalFiberConnection connection : this.connections) {
-        if (connection instanceof OpticalFiberInput) inputs.appendTag(connection.serializeNBT());
-        else if (connection instanceof OpticalFiberOutput) outputs.appendTag(connection.serializeNBT());
-      }
-    }
-    compound.setTag("inputs", inputs);
-    compound.setTag("outputs", outputs);
-    return compound;
+  public List<String> getChannels() {
+    return this.getController().fiberNetwork.getChannels();
   }
 
-  private NBTTagCompound writeSelfAttachmentsToNBT(NBTTagCompound compound) {
-    NBTTagCompound sides = new NBTTagCompound();
-    for (EnumFacing side : EnumFacing.VALUES) {
-      sides.setBoolean(side.getName(), this.world.getBlockState(this.pos).getValue(BlockOpticalFiber.getPropertyFromSide(side)) == FiberSideType.SELF_ATTACHMENT);
+  public Collection<TransferType> getAvailableTypes() {
+    // TODO implement this
+    return TransferType.getRegisteredTypes();
+  }
+
+  private NBTTagList serializeConnections() {
+    NBTTagList connections = new NBTTagList();
+    if (this.connections != null) {
+      for (OpticalFiberConnection connection : this.connections) {
+        connections.appendTag(OpticalFiberConnection.serializeNBT(connection));
+      }
     }
-    compound.setTag("self_attachments", sides);
-    return compound;
+    return connections;
+  }
+
+  private NBTTagList serializeSelfAttachments() {
+    NBTTagList selfAttachmentsNBT = new NBTTagList();
+    for (EnumFacing side : selfAttachments) {
+      selfAttachmentsNBT.appendTag(new NBTTagInt(side.getIndex()));
+    }
+    return selfAttachmentsNBT;
   }
 
   @Override
   public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-    this.writeConnectionsToNBT(compound);
-    this.writeSelfAttachmentsToNBT(compound);
+    compound.setTag("Connections", this.serializeConnections());
+    compound.setTag("SelfAttachments", this.serializeSelfAttachments());
     return super.writeToNBT(compound);
   }
 
-  // TODO find a better way of separating inputs and outputs and possibly others
   @Override
   public void readFromNBT(NBTTagCompound compound) {
     super.readFromNBT(compound); // Read this.pos
 
-    NBTTagList inputs = compound.getTagList("inputs", Constants.NBT.TAG_COMPOUND);
-    NBTTagList outputs = compound.getTagList("outputs", Constants.NBT.TAG_COMPOUND);
-    int numInputs = inputs.tagCount();
-    int numOutputs = outputs.tagCount();
+    NBTTagList connectionsNBT = compound.getTagList("Connections", Constants.NBT.TAG_COMPOUND);
 
-    if (numInputs > 0 || numOutputs > 0) this.connections = new HashSet<>();
+    int numConnections = connectionsNBT.tagCount();
 
+    if (numConnections > 0) this.connections = new HashSet<>();
 
-    for (int i = 0; i < numInputs; ++i) {
-      OpticalFiberInput input = new OpticalFiberInput(inputs.getCompoundTagAt(i));
-      this.connections.add(input);
-    }
-
-    for (int i = 0; i < numOutputs; ++i) {
-      OpticalFiberOutput output = new OpticalFiberOutput(outputs.getCompoundTagAt(i));
-      this.connections.add(output);
-    }
-
-    NBTTagCompound self_attachments = compound.getCompoundTag("self_attachments");
-    for (EnumFacing side : EnumFacing.VALUES) {
-      if (self_attachments.getBoolean(side.getName())) {
-        this.selfAttachments.add(side);
+    for (int i = 0; i < numConnections; ++i) {
+      OpticalFiberConnection connection;
+      try {
+        connection = OpticalFiberConnection.fromNBT(connectionsNBT.getCompoundTagAt(i));
+      } catch (OpticalFiberConnection.InvalidTypeKeyException | OpticalFiberConnection.InvalidConnectionKeyException e) {
+        // Don't restore these connections. Just remove them from the world by not restoring.
+        FiberOptics.LOGGER.log(Level.WARNING, e.toString());
+        return;
       }
+      this.connections.add(connection);
     }
+
+    NBTTagList selfAttachmentsNBT = compound.getTagList("SelfAttachments", Constants.NBT.TAG_INT);
+    selfAttachmentsNBT.iterator().forEachRemaining(sideNBT -> this.selfAttachments.add(EnumFacing.getFront(((NBTTagInt) sideNBT).getInt())));
   }
 
   @Override

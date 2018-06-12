@@ -9,7 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
+import java.util.HashSet;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -78,7 +78,8 @@ public class TileOpticalFiberController extends TileOpticalFiberBase implements 
 
   @Override
   public void update() {
-    this.fiberNetwork.doTransfers(this.world);
+    //FIXME
+//    this.fiberNetwork.doTransfers(this.world);
   }
 
   @Override
