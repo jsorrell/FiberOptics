@@ -32,8 +32,9 @@ import java.util.List;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller {
-  private static final SizedTexturePart BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_chooser.png"), new Dimension(206, 195));
-  protected static final SizedTexturePart ELEMENT_BACKGROUND = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_chooser.png"), new TextureOffset(0, 195), new Dimension(157, 23));
+  private static final ResourceLocation CONNECTION_CHOOSER_LOCATION = new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_chooser.png");
+  private static final SizedTexturePart BACKGROUND = new SizedTexturePart(CONNECTION_CHOOSER_LOCATION, new Dimension(206, 195));
+  protected static final SizedTexturePart ELEMENT_BACKGROUND = new SizedTexturePart(CONNECTION_CHOOSER_LOCATION, new TextureOffset(0, 195), new Dimension(157, 23));
   private static final Rectangle SCROLLER_BOX = new Rectangle(181, 23, 12, 161);
   private static final Rectangle LIST_ELEMENT_BOX = new Rectangle(13, 23, 157, 161);
 
@@ -41,6 +42,7 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
 
   public GuiScreenConnectionChooser (BlockPos pos, Collection<EnumFacing> sidesToDisplay, Collection<OpticalFiberConnection> connections) {
     super(SCROLLER_BOX, LIST_ELEMENT_BOX, ELEMENT_BACKGROUND.size.getHeight(), generateListElements(sidesToDisplay, connections));
+    connections.forEach(c -> System.out.println(c.pos ));
     this.pos = pos;
   }
 
@@ -84,12 +86,10 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
       FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketOpenChannelChooser.Request(this.pos, ((GuiSideListElement.GuiButtonConnectionAdd) button).listElement.side));
     } else if (button instanceof GuiConnectionListElement.GuiButtonConnectionEdit) {
       // Edit
-      //FIXME send to server
       OpticalFiberConnection connection = ((GuiConnectionListElement.GuiButtonConnectionEdit) button).listElement.connection;
       connection.getTransferType().displayEditConnectionGui(this.mc, connection);
     } else if (button instanceof GuiConnectionListElement.GuiButtonConnectionDelete) {
       // Delete
-      //FIXME send to server
       GuiConnectionListElement listElement = ((GuiConnectionListElement.GuiButtonConnectionDelete) button).listElement;
       FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketRemoveConnection(listElement.connection));
       this.removeListElement(listElement);
@@ -111,16 +111,12 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
 
   /* Connection List Element */
   private static class GuiConnectionListElement extends Gui implements IGuiListElement {
-
-
     protected static final Dimension TYPE_ICON_SIZE = new Dimension(16, 16);
     protected static final int TYPE_ICON_X = 2;
     protected static final int TYPE_ICON_Y = 3;
 
     protected static final int DIRECTION_ICON_X = 20;
     protected static final int DIRECTION_ICON_Y = 3;
-    protected static final SizedTexturePart INSERT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(17, 43), new Dimension(16, 16));
-//    protected static final SizedTexturePart EXTRACT_ICON = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(33, 43), new Dimension(16, 16));
 
     protected static final int CHANNEL_NAME_X = 39;
     protected static final int MAX_CHANNEL_NAME_WIDTH = 77;
@@ -163,7 +159,7 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
 
       /* Direction Icon */
       //FIXME
-      INSERT_ICON.drawTexturePart(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
+//      INSERT_ICON.drawTexturePart(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
 //      this.connection.drawConnectionIcon(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
 
       /* Channel Name */
@@ -197,7 +193,7 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
     }
 
     private static class GuiButtonConnectionDelete extends GuiButtonImage {
-      protected static final SizedTexturePart BUTTON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_chooser.png"), new TextureOffset(206, 34), new Dimension(17, 17));
+      protected static final SizedTexturePart BUTTON_TEXTURE = new SizedTexturePart(CONNECTION_CHOOSER_LOCATION, new TextureOffset(206, 34), new Dimension(17, 17));
       protected static final int PRESSED_Y_OFFSET = 17;
       public final GuiConnectionListElement listElement;
 
@@ -208,7 +204,7 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
     }
 
     private static class GuiButtonConnectionEdit extends GuiButtonImage {
-      protected static final SizedTexturePart BUTTON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_chooser.png"), new TextureOffset(223, 0), new Dimension(17, 17));
+      protected static final SizedTexturePart BUTTON_TEXTURE = new SizedTexturePart(CONNECTION_CHOOSER_LOCATION, new TextureOffset(223, 0), new Dimension(17, 17));
       protected static final int PRESSED_Y_OFFSET = 17;
       public final GuiConnectionListElement listElement;
 
@@ -265,7 +261,7 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
     }
 
     private static class GuiButtonConnectionAdd extends GuiButtonImage {
-      protected static final SizedTexturePart TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/connection_chooser.png"), new TextureOffset(206, 0), new Dimension(17, 17));
+      protected static final SizedTexturePart TEXTURE = new SizedTexturePart(CONNECTION_CHOOSER_LOCATION, new TextureOffset(206, 0), new Dimension(17, 17));
       protected static final int PRESSED_Y_OFFSET = 17;
       public final GuiSideListElement listElement;
 
