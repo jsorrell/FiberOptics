@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketRemoveConnection implements IMessage {
   private OpticalFiberConnection connection;
+  @SuppressWarnings("unused")
   public PacketRemoveConnection() { }
 
   public PacketRemoveConnection(OpticalFiberConnection connection) {
