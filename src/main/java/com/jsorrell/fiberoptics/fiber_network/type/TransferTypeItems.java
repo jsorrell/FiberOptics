@@ -2,9 +2,11 @@ package com.jsorrell.fiberoptics.fiber_network.type;
 
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionType;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -22,17 +24,23 @@ import net.minecraftforge.items.IItemHandler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.Serializable;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class TransferTypeItems extends TransferType<IItemHandler> {
+public class TransferTypeItems extends TransferType<IItemHandler> implements Serializable {
   private static final Item ICON_ITEM = Items.APPLE;
+
+  public TransferTypeItems(ResourceLocation registryKey) {
+    super(registryKey);
+  }
 
   @Override
   public void registerConnections() {
-    this.registerConnection(ItemInput.class, new ResourceLocation(FiberOptics.MODID, "input"));
-    this.registerConnection(ItemOutput.class, new ResourceLocation(FiberOptics.MODID, "output"));
+    this.registerConnection(new ItemInputType(new ResourceLocation(FiberOptics.MODID, "input")));
+    this.registerConnection(new ItemOutputType(new ResourceLocation(FiberOptics.MODID, "output")));
   }
 
   @Override
@@ -68,8 +76,8 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
   }
 
   @Override
-  public String getUnlocalizedName() {
-    return "items";
+  public String getLocalizedName() {
+    return "Item";
   }
 
   @Override
@@ -80,99 +88,152 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
     renderItem.renderItemIntoGUI(new ItemStack(ICON_ITEM), 0, 0);
   }
 
-  @Override
-  public void displayCreateConnectionGui(Minecraft mc, BlockPos pos, EnumFacing side) {
-    //TODO implement
-  }
+  /* Input */
+  public class ItemInputType extends OpticalFiberConnectionType {
 
-  @Override
-  public void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection) {
-    //TODO implement
-  }
-
-  // TODO delete this
-  public static ItemInput createTestInput(BlockPos pos, EnumFacing side, String channelName) {
-    return new ItemInput(pos, side, channelName);
-  }
-
-  public static class ItemInput extends OpticalFiberConnection {
-    private ItemInput(BlockPos pos, EnumFacing side, String channelName) {
-      super(pos, side, channelName);
-    }
-
-    @SuppressWarnings("unused")
-    public ItemInput(ByteBuf buf) {
-      super(buf);
-    }
-
-    @SuppressWarnings("unused")
-    public ItemInput(NBTTagCompound compound) {
-      super(compound);
+    public ItemInputType(ResourceLocation registryKey) {
+      super(registryKey, TransferTypeItems.this);
     }
 
     @Override
-    public TransferType getTransferType() {
-      return ModTransferTypes.itemType;
-    }
-  }
-
-  public static class ItemOutput extends OpticalFiberConnection {
-    private int priority;
-
-    private ItemOutput(BlockPos pos, EnumFacing side, String channelName, int priority) {
-      super(pos, side, channelName);
-      this.priority = priority;
-    }
-
-    public ItemOutput(ByteBuf buf) {
-      super(buf);
-      this.priority = buf.readInt();
-    }
-
-    public ItemOutput(NBTTagCompound compound) {
-      super(compound);
-      this.priority = compound.getInteger("priority");
-    }
-
-    @Override
-    public TransferType getTransferType() {
-      return ModTransferTypes.itemType;
-    }
-
-    @Override
-    public void writeConnectionSpecificBytes(ByteBuf buf) {
-      buf.writeInt(this.priority);
+    public String getShortLocalizedName() {
+      return "Input";
     }
 
     @Nullable
     @Override
-    protected NBTTagCompound serializeConnectionSpecificNBT() {
-      NBTTagCompound compound = new NBTTagCompound();
-      compound.setInteger("priority", this.priority);
-      return compound;
+    public GuiScreen getCreateConnectionGui(BlockPos pos, EnumFacing side, String channel, Consumer<OpticalFiberConnection> onSubmit, Runnable onCancel, Runnable onBack) {
+      onSubmit.accept(new ItemInput(pos, side, channel));
+      return null;
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof ItemOutput)) return false;
-      if (!super.equals(o)) return false;
-      ItemOutput that = (ItemOutput) o;
-      return priority == that.priority;
+    public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+
     }
 
     @Override
-    public int hashCode() {
-      return Objects.hash(super.hashCode(), priority);
+    public OpticalFiberConnection fromBuf(ByteBuf buf) {
+      return new ItemInput(buf);
     }
 
     @Override
-    public int compareTo(OpticalFiberConnection connection) {
-      int cmp;
-      if ((cmp = super.compareTo(connection)) != 0) return cmp;
-      ItemOutput con = (ItemOutput) connection;
-      if ((cmp = Integer.compare(this.priority, con.priority)) != 0) return cmp;
-      return 0;
+    public OpticalFiberConnection fromNBT(NBTTagCompound compound) {
+      return new ItemInput(compound);
+    }
+
+    public class ItemInput extends OpticalFiberConnection {
+      private ItemInput(BlockPos pos, EnumFacing side, String channelName) {
+        super(pos, side, channelName);
+      }
+
+      public ItemInput(ByteBuf buf) {
+        super(buf);
+      }
+
+      public ItemInput(NBTTagCompound compound) {
+        super(compound);
+      }
+
+      @Override
+      public OpticalFiberConnectionType getConnectionType() {
+        return ItemInputType.this;
+      }
+    }
+  }
+
+  /* Output */
+  public class ItemOutputType extends OpticalFiberConnectionType {
+    public ItemOutputType(ResourceLocation registryKey) {
+      super(registryKey, TransferTypeItems.this);
+    }
+
+    @Override
+    public String getShortLocalizedName() {
+      return "Output";
+    }
+
+    @Nullable
+    @Override
+    public GuiScreen getCreateConnectionGui(BlockPos pos, EnumFacing side, String channel, Consumer<OpticalFiberConnection> onSubmit, Runnable onCancel, Runnable onBack) {
+      //FIXME
+      onSubmit.accept(new ItemOutput(pos, side, channel, 0));
+      return null;
+    }
+
+    @Override
+    public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+
+    }
+
+    @Override
+    public OpticalFiberConnection fromBuf(ByteBuf buf) {
+      return new ItemOutput(buf);
+    }
+
+    @Override
+    public OpticalFiberConnection fromNBT(NBTTagCompound compound) {
+      return new ItemOutput(compound);
+    }
+
+    public class ItemOutput extends OpticalFiberConnection {
+      private int priority;
+
+      private ItemOutput(BlockPos pos, EnumFacing side, String channelName, int priority) {
+        super(pos, side, channelName);
+        this.priority = priority;
+      }
+
+      public ItemOutput(ByteBuf buf) {
+        super(buf);
+        this.priority = buf.readInt();
+      }
+
+      public ItemOutput(NBTTagCompound compound) {
+        super(compound);
+        this.priority = compound.getInteger("Priority");
+      }
+
+      @Override
+      public OpticalFiberConnectionType getConnectionType() {
+        return ItemOutputType.this;
+      }
+
+      @Override
+      public void writeConnectionSpecificBytes(ByteBuf buf) {
+        buf.writeInt(this.priority);
+      }
+
+      @Nullable
+      @Override
+      protected NBTTagCompound serializeConnectionSpecificNBT() {
+        NBTTagCompound compound = new NBTTagCompound();
+        compound.setInteger("Priority", this.priority);
+        return compound;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ItemOutput)) return false;
+        if (!super.equals(o)) return false;
+        ItemOutput that = (ItemOutput) o;
+        return priority == that.priority;
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(super.hashCode(), priority);
+      }
+
+      @Override
+      public int compareTo(OpticalFiberConnection connection) {
+        int cmp;
+        if ((cmp = super.compareTo(connection)) != 0) return cmp;
+        ItemOutput con = (ItemOutput) connection;
+        if ((cmp = Integer.compare(this.priority, con.priority)) != 0) return cmp;
+        return 0;
+      }
     }
   }
 }

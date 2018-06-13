@@ -2,10 +2,13 @@ package com.jsorrell.fiberoptics.fiber_network.type;
 
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionType;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -19,19 +22,31 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.reflect.internal.Types;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TransferTypeFluids extends TransferType<IFluidHandler> {
   private static final Item ICON_ITEM = Items.WATER_BUCKET;
 
+  public TransferTypeFluids(ResourceLocation registryKey) {
+    super(registryKey);
+  }
+
+  @Override
+  public String getLocalizedName() {
+    return "Fluid";
+  }
+
   @Override
   public void registerConnections() {
-    this.registerConnection(FluidInput.class, new ResourceLocation(FiberOptics.MODID, "input"));
-    this.registerConnection(FluidOutput.class, new ResourceLocation(FiberOptics.MODID, "output"));
+    this.registerConnection(new FluidInputType(new ResourceLocation(FiberOptics.MODID, "input")));
+    this.registerConnection(new FluidOutputType(new ResourceLocation(FiberOptics.MODID, "output")));
   }
 
   @Override
@@ -60,11 +75,6 @@ public class TransferTypeFluids extends TransferType<IFluidHandler> {
   }
 
   @Override
-  public String getUnlocalizedName() {
-    return "forge_fluids";
-  }
-
-  @Override
   @SideOnly(Side.CLIENT)
   public void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
     RenderItem renderItem = mc.getRenderItem();
@@ -72,51 +82,106 @@ public class TransferTypeFluids extends TransferType<IFluidHandler> {
     renderItem.renderItemIntoGUI(new ItemStack(ICON_ITEM), 0, 0);
   }
 
-  @Override
-  public void displayCreateConnectionGui(Minecraft mc, BlockPos pos, EnumFacing side) {
-    //TODO implement
-  }
-
-  @Override
-  public void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection) {
-    //TODO implement
-  }
-
-  public static class FluidInput extends OpticalFiberConnection {
-    private FluidInput(BlockPos pos, EnumFacing side, String channelName) {
-      super(pos, side, channelName);
-    }
-
-    public FluidInput(ByteBuf buf) {
-      super(buf);
-    }
-
-    public FluidInput(NBTTagCompound compound) {
-      super(compound);
+  /* Input Type */
+  public class FluidInputType extends OpticalFiberConnectionType {
+    public FluidInputType(ResourceLocation registryKey) {
+      super(registryKey, TransferTypeFluids.this);
     }
 
     @Override
-    public TransferType getTransferType() {
-      return ModTransferTypes.fluidType;
-    }
-  }
-
-  public static class FluidOutput extends OpticalFiberConnection {
-    private FluidOutput(BlockPos pos, EnumFacing side, String channelName) {
-      super(pos, side, channelName);
-    }
-
-    public FluidOutput(ByteBuf buf) {
-      super(buf);
-    }
-
-    public FluidOutput(NBTTagCompound compound) {
-      super(compound);
+    public String getShortLocalizedName() {
+      return "Input";
     }
 
     @Override
-    public TransferType getTransferType() {
-      return ModTransferTypes.fluidType;
+    public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+    }
+
+    @Nullable
+    @Override
+    public GuiScreen getCreateConnectionGui(BlockPos pos, EnumFacing side, String channel, Consumer<OpticalFiberConnection> onSubmit, Runnable onCancel, Runnable onBack) {
+      onSubmit.accept(new FluidInput(pos, side, channel));
+      return null;
+    }
+
+    @Override
+    public OpticalFiberConnection fromBuf(ByteBuf buf) {
+      return new FluidInput(buf);
+    }
+
+    @Override
+    public OpticalFiberConnection fromNBT(NBTTagCompound compound) {
+      return new FluidInput(compound);
+    }
+
+    public class FluidInput extends OpticalFiberConnection {
+      private FluidInput(BlockPos pos, EnumFacing side, String channelName) {
+        super(pos, side, channelName);
+      }
+
+      public FluidInput(ByteBuf buf) {
+        super(buf);
+      }
+
+      public FluidInput(NBTTagCompound compound) {
+        super(compound);
+      }
+
+      @Override
+      public OpticalFiberConnectionType getConnectionType() {
+        return FluidInputType.this;
+      }
+    }
+  }
+
+  public class FluidOutputType extends OpticalFiberConnectionType {
+    public FluidOutputType(ResourceLocation registryKey) {
+      super(registryKey, TransferTypeFluids.this);
+    }
+
+    @Override
+    public String getShortLocalizedName() {
+      return "Output";
+    }
+
+    @Override
+    public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+    }
+
+    @Nullable
+    @Override
+    public GuiScreen getCreateConnectionGui(BlockPos pos, EnumFacing side, String channel, Consumer<OpticalFiberConnection> onSubmit, Runnable onCancel, Runnable onBack) {
+      onSubmit.accept(new FluidOutput(pos, side, channel));
+      return null;
+    }
+
+    @Override
+    public OpticalFiberConnection fromBuf(ByteBuf buf) {
+      return new FluidOutput(buf);
+    }
+
+    @Override
+    public OpticalFiberConnection fromNBT(NBTTagCompound compound) {
+      return new FluidOutput(compound);
+    }
+
+    public class FluidOutput extends OpticalFiberConnection {
+      private FluidOutput(BlockPos pos, EnumFacing side, String channelName) {
+        super(pos, side, channelName);
+      }
+
+      public FluidOutput(ByteBuf buf) {
+        super(buf);
+      }
+
+      public FluidOutput(NBTTagCompound compound) {
+        super(compound);
+      }
+
+      @Override
+      public OpticalFiberConnectionType getConnectionType() {
+        return FluidOutputType.this;
+      }
     }
   }
 }

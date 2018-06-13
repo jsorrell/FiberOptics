@@ -2,7 +2,7 @@ package com.jsorrell.fiberoptics.message.optical_fiber;
 
 import com.jsorrell.fiberoptics.block.optical_fiber.BlockOpticalFiber;
 import com.jsorrell.fiberoptics.block.optical_fiber.TileOpticalFiberBase;
-import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiScreenTypeChooser;
+import com.jsorrell.fiberoptics.client.gui.optical_fiber.GuiScreenTransferTypeChooser;
 import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
 import com.jsorrell.fiberoptics.util.Util;
 import io.netty.buffer.ByteBuf;
@@ -20,16 +20,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class PacketOpenTypeChooser implements IMessage {
+public class PacketOpenTransferTypeChooser implements IMessage {
   private BlockPos pos;
   private EnumFacing side;
   private String channel;
   private List<TransferType> transferTypes;
 
   @SuppressWarnings("unused")
-  public PacketOpenTypeChooser() { }
+  public PacketOpenTransferTypeChooser() { }
 
-  public PacketOpenTypeChooser(BlockPos pos, EnumFacing side, String channel, Collection<TransferType> transferTypes) {
+  public PacketOpenTransferTypeChooser(BlockPos pos, EnumFacing side, String channel, Collection<TransferType> transferTypes) {
     this.pos = pos;
     this.side = side;
     this.channel = channel;
@@ -53,10 +53,10 @@ public class PacketOpenTypeChooser implements IMessage {
   }
 
   /* Client Side */
-  public static class Handler implements IMessageHandler<PacketOpenTypeChooser, IMessage> {
+  public static class Handler implements IMessageHandler<PacketOpenTransferTypeChooser, IMessage> {
     @Override
-    public IMessage onMessage(PacketOpenTypeChooser message, MessageContext ctx) {
-      Minecraft.getMinecraft().displayGuiScreen(new GuiScreenTypeChooser(message.pos, message.side, message.channel, message.transferTypes));
+    public IMessage onMessage(PacketOpenTransferTypeChooser message, MessageContext ctx) {
+      Minecraft.getMinecraft().displayGuiScreen(new GuiScreenTransferTypeChooser(message.pos, message.side, message.channel, message.transferTypes));
       return null;
     }
   }
@@ -91,9 +91,9 @@ public class PacketOpenTypeChooser implements IMessage {
     }
 
     /* Server Side */
-    public static class Handler implements IMessageHandler<PacketOpenTypeChooser.Request, PacketOpenTypeChooser> {
+    public static class Handler implements IMessageHandler<PacketOpenTransferTypeChooser.Request, PacketOpenTransferTypeChooser> {
       @Override
-      public PacketOpenTypeChooser onMessage(Request message, MessageContext ctx) {
+      public PacketOpenTransferTypeChooser onMessage(Request message, MessageContext ctx) {
         WorldServer world = ctx.getServerHandler().player.getServerWorld();
 
         if (!world.isBlockLoaded(message.pos) || !BlockOpticalFiber.isFiberInPos(world, message.pos)) {
@@ -101,7 +101,7 @@ public class PacketOpenTypeChooser implements IMessage {
         }
         TileOpticalFiberBase tile = Util.getTileChecked(world, message.pos, TileOpticalFiberBase.class);
 
-        return new PacketOpenTypeChooser(message.pos, message.side, message.channel, tile.getAvailableTypes());
+        return new PacketOpenTransferTypeChooser(message.pos, message.side, message.channel, tile.getAvailableTypes());
       }
     }
   }

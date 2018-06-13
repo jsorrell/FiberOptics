@@ -4,14 +4,12 @@ import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
 import com.jsorrell.fiberoptics.message.optical_fiber.SerializeUtils;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
 import javax.annotation.Nullable;
@@ -44,8 +42,8 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
    * @param buf the {@code ByteBuf} to write to.
    */
   public final void toBytes(ByteBuf buf) {
-    SerializeUtils.writeUTF8String(buf, TransferType.getKeyFromType(this.getTransferType()).toString());
-    SerializeUtils.writeUTF8String(buf, this.getTransferType().getKeyFromConnection(this.getClass()).toString());
+    SerializeUtils.writeUTF8String(buf, this.getTransferType().getRegistryKey().toString());
+    SerializeUtils.writeUTF8String(buf, this.getConnectionType().getRegistryKey().toString());
     buf.writeLong(this.pos.toLong());
     buf.writeByte(this.side.getIndex());
     SerializeUtils.writeUTF8String(buf, this.channelName);
@@ -60,15 +58,8 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
    */
   public static OpticalFiberConnection fromBytes(ByteBuf buf) {
     TransferType<?> type = TransferType.getTypeFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
-    Class<? extends OpticalFiberConnection> connectionType = type.getConnectionFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
-    try {
-      Constructor<? extends OpticalFiberConnection> constructor = connectionType.getConstructor(ByteBuf.class);
-      return constructor.newInstance(buf);
-    } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException("Connections must have a public constructor that takes a ByteBuf.");
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
+    OpticalFiberConnectionType connectionType = type.getConnectionFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
+    return connectionType.fromBuf(buf);
   }
 
   /**
@@ -116,24 +107,17 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
    * @throws InvalidConnectionKeyException thrown if the saved connection type in the compound is invalid; occurs organically when reading a connection type that was previously loaded but not now.
    */
   public static OpticalFiberConnection fromNBT(NBTTagCompound compound) throws InvalidTypeKeyException, InvalidConnectionKeyException {
-    Class<? extends  OpticalFiberConnection> connectionClass;
+    OpticalFiberConnectionType connectionType;
     try {
       TransferType<?> transferType = TransferType.getTypeFromKey(new ResourceLocation(compound.getString("_TransferType")));
-      connectionClass = transferType.getConnectionFromKey(new ResourceLocation(compound.getString("_ConnectionType")));
+      connectionType = transferType.getConnectionFromKey(new ResourceLocation(compound.getString("_ConnectionType")));
     } catch (TransferType.NoTypeForKeyException e) {
       throw new InvalidTypeKeyException(e.key);
     } catch (TransferType.NoConnectionForKeyException e) {
       throw new InvalidConnectionKeyException(e.typeKey, e.connectionKey);
     }
 
-    try {
-      Constructor<? extends OpticalFiberConnection> constructor = connectionClass.getConstructor(NBTTagCompound.class);
-      return constructor.newInstance(compound);
-    } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException(connectionClass.getName() + " must have a public constructor that takes a NBTTagCompound.");
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException(e.getCause());
-    }
+    return connectionType.fromNBT(compound);
   }
 
   /**
@@ -150,8 +134,8 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
    */
   public final NBTTagCompound serializeNBT() {
     NBTTagCompound compound = new NBTTagCompound();
-    compound.setString("_TransferType", TransferType.getKeyFromType(this.getTransferType()).toString());
-    compound.setString("_ConnectionType", this.getTransferType().getKeyFromConnection(this.getClass()).toString());
+    compound.setString("_TransferType", this.getTransferType().getRegistryKey().toString());
+    compound.setString("_ConnectionType", this.getConnectionType().getRegistryKey().toString());
     NBTTagCompound pos = new NBTTagCompound();
     compound.setTag("_Pos", pos);
     pos.setInteger("x", this.pos.getX());
@@ -189,14 +173,67 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
     return worldIn.getTileEntity(connectedTilePos);
   }
 
+//  public static void drawConnectionTypeIcon(Class<? extends OpticalFiberConnection> clazz, Minecraft mc, float zLevel, float partialTicks) {
+//    Method method;
+//    try {
+//      method = clazz.getMethod("drawConnectionTypeIcon", Minecraft.class, float.class, float.class);
+//    } catch (NoSuchMethodException e) {
+//      throw new AssertionError("Should never get here.", e.getCause());
+//    }
+//
+//    // Not hidden
+//    if (method.getDeclaringClass().equals(OpticalFiberConnection.class)) {
+//      throw new RuntimeException(method.getName() + " should be hidden by " + clazz.getName() + ".");
+//    }
+//
+//    try {
+//      method.invoke(null, mc, zLevel, partialTicks);
+//    } catch (IllegalAccessException e) {
+//      throw new AssertionError(method.getName() + " in " + method.getDeclaringClass().getName() + " should be public.", e);
+//    } catch (InvocationTargetException e) {
+//      if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
+//      else throw new RuntimeException(method.getName() + " in " + method.getDeclaringClass().getName() + " should not throw.", e.getCause());
+//    }
+//  }
+//
+//  public static GuiScreen getEditConnectionGui(Class<? extends OpticalFiberConnection> clazz, OpticalFiberConnection connection, Consumer<OpticalFiberConnection> handleSubmit, Runnable handleCancel, Runnable handleBack) {
+//    Method method;
+//    try {
+//      method = clazz.getMethod("getEditConnectionGui", OpticalFiberConnection.class, Consumer.class, Runnable.class, Runnable.class);
+//    } catch (NoSuchMethodException e) {
+//      throw new AssertionError("Should never get here.", e);
+//    }
+//
+//    try {
+//      return (GuiScreen) method.invoke(null, connection, handleSubmit, handleCancel, handleBack);
+//    } catch (IllegalAccessException e) {
+//      throw new AssertionError(method.getName() + " in " + method.getDeclaringClass().getName() + " should be public.", e);
+//    } catch (InvocationTargetException e) {
+//      if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
+//      else throw new RuntimeException(method.getName() + " in " + method.getDeclaringClass().getName() + " should not throw.", e.getCause());
+//    }
+//  }
+//
+//  public static GuiScreen getCreateConnectionGui(Class<? extends OpticalFiberConnection> clazz, BlockPos pos, EnumFacing side, String channelName, Consumer<OpticalFiberConnection> handleSubmit, Runnable handleCancel, Runnable handleBack) {
+//    Method method;
+//    try {
+//      method = clazz.getMethod("getCreateConnectionGui", BlockPos.class, EnumFacing.class, String.class, Consumer.class, Runnable.class, Runnable.class);
+//    } catch (NoSuchMethodException e) {
+//      throw new AssertionError("Should never get here.", e);
+//    }
+//
+//    try {
+//      return (GuiScreen) method.invoke(null, pos, side, channelName, handleSubmit, handleCancel, handleBack);
+//    } catch (IllegalAccessException e) {
+//      throw new AssertionError(method.getName() + " in " + method.getDeclaringClass().getName() + " should be public.", e);
+//    } catch (InvocationTargetException e) {
+//      if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
+//      else throw new RuntimeException(method.getName() + " in " + method.getDeclaringClass().getName() + " should not throw.", e.getCause());
+//    }
+//  }
+
 
   /* Define Connection */
-
-  /**
-   * Returns the transfer type associated with the connection.
-   * @return the transfer type associated with the connection.
-   */
-  public abstract TransferType getTransferType();
 
   /**
    * Serializes the information specific to the type of connection to a {@link NBTTagCompound}.
@@ -212,6 +249,20 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
    * @param buf the buf to write to.
    */
   protected void writeConnectionSpecificBytes(ByteBuf buf) { }
+
+  /**
+   * Get whether the connection can be edited. If true {@link } must not return null for this connection type.
+   * @return {@code true} iff the connection can be edited.
+   */
+  public boolean canEditConnection() {
+    return false;
+  }
+
+  public final TransferType getTransferType() {
+    return this.getConnectionType().getTransferType();
+  }
+
+  public abstract OpticalFiberConnectionType getConnectionType();
 
   @Override
   @OverridingMethodsMustInvokeSuper
@@ -232,8 +283,7 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
     if ((cmp = this.side.compareTo(connection.side)) != 0) return cmp;
     if ((cmp = this.channelName.compareTo(connection.channelName)) != 0) return cmp;
     if ((cmp = this.getTransferType().compareTo(connection.getTransferType())) != 0) return cmp;
-    TransferType type = this.getTransferType();
-    if ((cmp = type.getKeyFromConnection(this.getClass()).compareTo(type.getKeyFromConnection(connection.getClass()))) != 0) return cmp;
+    if ((cmp = this.getConnectionType().compareTo(connection.getConnectionType())) != 0) return cmp;
     return 0;
   }
 

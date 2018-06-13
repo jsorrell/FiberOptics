@@ -41,6 +41,7 @@ public abstract class GuiOpticalFiber extends GuiScreen {
   @Deprecated
   public final void drawScreen(int mouseX, int mouseY, float partialTicks) {
     if (this.mc == null) return; // Is this a bug in forge? Sometimes this is called by EntityRenderer#updateCameraAndRender before GuiScreen#setWorldAndResolution
+    if (this.backgroundStart == null) return; // FIXME why is this happening.
     this.drawScreenUnchecked(mouseX, mouseY, partialTicks);
   }
 

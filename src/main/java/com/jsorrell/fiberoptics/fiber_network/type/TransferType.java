@@ -3,7 +3,7 @@ package com.jsorrell.fiberoptics.fiber_network.type;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
-import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -11,7 +11,6 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -27,12 +26,18 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
   public static final Dimension RENDER_SIZE = new Dimension(16, 16);
   private static final BiMap<ResourceLocation, TransferType> REGISTERED_TYPES = HashBiMap.create();
 
-  private final BiMap<ResourceLocation, Class<? extends OpticalFiberConnection>> registeredConnections = HashBiMap.create();
+  private final BiMap<ResourceLocation, OpticalFiberConnectionType> registeredConnections = HashBiMap.create();
+
+  private final ResourceLocation registryKey;
+
+  public TransferType(ResourceLocation registryKey) {
+    this.registryKey = registryKey;
+  }
 
   /** Registry **/
-  public static void register(TransferType type, ResourceLocation key) {
+  public static void registerType(TransferType type) {
     type.registerConnections();
-    REGISTERED_TYPES.put(key, type);
+    REGISTERED_TYPES.put(type.getRegistryKey(), type);
   }
 
   public static ImmutableList<TransferType> getRegisteredTypes() {
@@ -47,11 +52,11 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
     return REGISTERED_TYPES.containsValue(type);
   }
 
-  public static ResourceLocation getKeyFromType(TransferType type) {
-    ResourceLocation key = REGISTERED_TYPES.inverse().get(type);
-    if (key == null) throw new RuntimeException("Transfer type " + type.getClass().getName() + " not registered.");
-    return key;
-  }
+//  public static ResourceLocation getKeyFromType(TransferType type) {
+//    ResourceLocation key = REGISTERED_TYPES.inverse().get(type);
+//    if (key == null) throw new RuntimeException("Transfer type " + type.getClass().getName() + " not registered.");
+//    return key;
+//  }
 
 
   public static boolean hasTypeForKey(ResourceLocation key) {
@@ -72,19 +77,27 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
     return type;
   }
 
-  public final void registerConnection(Class<? extends OpticalFiberConnection> connection, ResourceLocation key) {
-    this.registeredConnections.put(key, connection);
+  public final void registerConnection(OpticalFiberConnectionType connectionType) {
+    this.registeredConnections.put(connectionType.getRegistryKey(), connectionType);
   }
 
-  public final boolean connectionIsRegistered(Class<? extends OpticalFiberConnection> connection) {
-    return this.registeredConnections.containsValue(connection);
+  public ImmutableList<? extends OpticalFiberConnectionType> getRegisteredConnections() {
+    return ImmutableList.copyOf(this.registeredConnections.values());
   }
 
-  public final ResourceLocation getKeyFromConnection(Class<? extends OpticalFiberConnection> connection) {
-    ResourceLocation key = this.registeredConnections.inverse().get(connection);
-    if (key == null) throw new RuntimeException("Connection type " + connection.getName() + " not registered.");
-    return key;
+  public int getNumRegisteredConnections() {
+    return this.registeredConnections.size();
   }
+
+  public final boolean connectionIsRegistered(OpticalFiberConnectionType connectionType) {
+    return this.registeredConnections.containsValue(connectionType);
+  }
+
+//  public final ResourceLocation getKeyFromConnection(OpticalFiberConnectionType connectionType) {
+//    ResourceLocation key = this.registeredConnections.inverse().get(connectionType);
+//    if (key == null) throw new RuntimeException("Connection type " + connectionType.getConnectionClass().getName() + " not registered.");
+//    return key;
+//  }
 
   public final boolean hasConnectionForKey(ResourceLocation key) {
     return this.registeredConnections.containsKey(key);
@@ -100,13 +113,19 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
     }
   }
 
-  public final Class<? extends OpticalFiberConnection> getConnectionFromKey(ResourceLocation key) throws NoConnectionForKeyException {
-    Class<? extends OpticalFiberConnection> connection = this.registeredConnections.get(key);
-    if (connection == null) throw new NoConnectionForKeyException(TransferType.getKeyFromType(this), key);
-    return connection;
+  public final OpticalFiberConnectionType getConnectionFromKey(ResourceLocation key) throws NoConnectionForKeyException {
+    OpticalFiberConnectionType connectionType = this.registeredConnections.get(key);
+    if (connectionType == null) throw new NoConnectionForKeyException(this.registryKey, key);
+    return connectionType;
   }
 
   /** Type Options **/
+  public final ResourceLocation getRegistryKey() {
+    return registryKey;
+  }
+
+  public abstract String getLocalizedName();
+
   public abstract Capability<?> getCapability();
 
   public abstract boolean isOffering(T input);
@@ -121,21 +140,14 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
     return tile.hasCapability(getCapability(), side);
   }
 
-  public abstract String getUnlocalizedName();
-
-  public String getName() {
-    return I18n.format("transferType." + getUnlocalizedName() + ".name");
-  }
-
   @Override
   public String toString() {
-    return getName();
+    return this.registryKey.toString();
   }
 
   @Override
   public final int compareTo(TransferType transferType) {
-    if (transferType == this) return 0;
-    return REGISTERED_TYPES.inverse().get(this).compareTo(REGISTERED_TYPES.inverse().get(transferType));
+    return this.getRegistryKey().compareTo(transferType.getRegistryKey());
   }
 
   @SideOnly(Side.CLIENT)
@@ -169,10 +181,4 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
    */
   @SideOnly(Side.CLIENT)
   public abstract void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks);
-
-  @SideOnly(Side.CLIENT)
-  public abstract void displayCreateConnectionGui(Minecraft mc, BlockPos pos, EnumFacing side);
-
-  @SideOnly(Side.CLIENT)
-  public abstract void displayEditConnectionGui(Minecraft mc, OpticalFiberConnection connection);
 }

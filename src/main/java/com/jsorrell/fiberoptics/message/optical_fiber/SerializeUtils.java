@@ -48,7 +48,7 @@ public class SerializeUtils {
 
   /* TransferType */
   public static void writeTransferType(ByteBuf buf, TransferType type) {
-    writeUTF8String(buf, TransferType.getKeyFromType(type).toString());
+    writeUTF8String(buf, type.getRegistryKey().toString());
   }
 
   @Nullable

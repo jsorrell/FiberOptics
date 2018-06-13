@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.client.gui.components.IGuiListElement;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
-import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenTypeChooser;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenTransferTypeChooser;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -152,7 +152,7 @@ public class GuiScreenChannelChooser extends GuiOpticalFiberListWithScroller {
     String channel = this.channelField.getText();
     this.channelField.setEnabled(false);
     Keyboard.enableRepeatEvents(false);
-    FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketOpenTypeChooser.Request(this.pos, this.side, channel));
+    FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketOpenTransferTypeChooser.Request(this.pos, this.side, channel));
   }
 
   /* Submit Button */

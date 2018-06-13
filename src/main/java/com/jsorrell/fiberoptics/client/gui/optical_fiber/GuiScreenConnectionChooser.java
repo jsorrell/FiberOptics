@@ -4,16 +4,21 @@ import com.google.common.collect.ImmutableList;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.client.gui.components.IGuiListElement;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
+import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionType;
 import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
+import com.jsorrell.fiberoptics.fiber_network.type.TransferTypeItems;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
+import com.jsorrell.fiberoptics.message.optical_fiber.PacketCreateConnection;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenChannelChooser;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketRemoveConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
+import jdk.nashorn.internal.ir.annotations.Immutable;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiButtonImage;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.model.TextureOffset;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
@@ -25,9 +30,13 @@ import org.lwjgl.util.Rectangle;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -87,7 +96,18 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
     } else if (button instanceof GuiConnectionListElement.GuiButtonConnectionEdit) {
       // Edit
       OpticalFiberConnection connection = ((GuiConnectionListElement.GuiButtonConnectionEdit) button).listElement.connection;
-      connection.getTransferType().displayEditConnectionGui(this.mc, connection);
+      assert connection.canEditConnection();
+      OpticalFiberConnectionType connectionType = connection.getConnectionType();
+
+      Consumer<OpticalFiberConnection> handleSubmit = c -> FiberOpticsPacketHandler.INSTANCE.sendToServer(new PacketCreateConnection(c, connection));
+      Runnable handleCancel = () -> this.mc.displayGuiScreen(null);
+      Runnable handleBack = () -> this.mc.displayGuiScreen(this);
+
+      Supplier<GuiScreen> editScreen = connection.getConnectionType().getEditConnectionGui(connection, handleSubmit, handleCancel, handleBack);
+
+      if (editScreen != null) {
+        this.mc.displayGuiScreen(editScreen.get());
+      }
     } else if (button instanceof GuiConnectionListElement.GuiButtonConnectionDelete) {
       // Delete
       GuiConnectionListElement listElement = ((GuiConnectionListElement.GuiButtonConnectionDelete) button).listElement;
@@ -102,9 +122,9 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
     if ((cmp = t0.side.compareTo(t1.side)) != 0) return cmp;
     // Group by able to connect. Order within doesn't matter.
     if ((cmp = t0.channelName.compareTo(t1.channelName)) != 0) return cmp;
-    if ((cmp = TransferType.getKeyFromType(t0.getTransferType()).compareTo(TransferType.getKeyFromType(t1.getTransferType()))) != 0) return cmp;
+    if ((cmp = t0.getTransferType().compareTo(t1.getTransferType())) != 0) return cmp;
     // Sort remaining. Connection type should probably be first.
-    if ((cmp = t0.getTransferType().getKeyFromConnection(t0.getClass()).compareTo(t1.getTransferType().getKeyFromConnection(t1.getClass()))) != 0) return cmp;
+    if ((cmp = t0.getConnectionType().compareTo(t1.getConnectionType())) != 0) return cmp;
 
     return 0;
   }
@@ -142,9 +162,14 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
     public List<GuiButton> initListElement(int elementNum, int x, int y) {
       this.x = x;
       this.y = y;
-      this.editButton = new GuiButtonConnectionEdit(elementNum, x + EDIT_BUTTON_X, y + EDIT_BUTTON_Y, this);
       this.deleteButton = new GuiButtonConnectionDelete(elementNum, x + DELETE_BUTTON_X, y + DELETE_BUTTON_Y, this);
-      return ImmutableList.of(this.editButton, this.deleteButton);
+
+      if (this.connection.canEditConnection()) {
+        this.editButton = new GuiButtonConnectionEdit(elementNum, x + EDIT_BUTTON_X, y + EDIT_BUTTON_Y, this);
+        return ImmutableList.of(this.editButton, this.deleteButton);
+      } else {
+        return ImmutableList.of(this.deleteButton);
+      }
     }
 
     @Override
@@ -184,6 +209,8 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
       int channelNameX = x + CHANNEL_NAME_X;
       int channelNameY = y + (ELEMENT_BACKGROUND.size.getHeight() - mc.fontRenderer.FONT_HEIGHT)/2;
       mc.fontRenderer.drawString(channelNameToRender, channelNameX, channelNameY, CHANNEL_NAME_COLOR);
+
+      GlStateManager.color(1, 1, 1, 1);
 
       if (this.editButton != null && this.deleteButton != null) {
         GlStateManager.color(1F, 1F, 1F, 1F);
