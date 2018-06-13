@@ -195,7 +195,7 @@ public class FiberNetwork implements INBTSerializable<NBTTagCompound> {
 
     for (Tuple<TreeSet<OpticalFiberConnection>, Channel> connectionGroup : this.connections.values()) {
       for (OpticalFiberConnection connection : connectionGroup.getFirst()) {
-        connections.appendTag(OpticalFiberConnection.serializeNBT(connection));
+        connections.appendTag(connection.serializeNBT());
       }
     }
 

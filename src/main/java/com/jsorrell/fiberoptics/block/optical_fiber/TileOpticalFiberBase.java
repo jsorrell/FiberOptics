@@ -245,7 +245,7 @@ public abstract class TileOpticalFiberBase extends TileEntity implements IConnec
     NBTTagList connections = new NBTTagList();
     if (this.connections != null) {
       for (OpticalFiberConnection connection : this.connections) {
-        connections.appendTag(OpticalFiberConnection.serializeNBT(connection));
+        connections.appendTag(connection.serializeNBT());
       }
     }
     return connections;

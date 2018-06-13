@@ -4,6 +4,7 @@ import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
 import com.jsorrell.fiberoptics.message.optical_fiber.SerializeUtils;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -35,19 +36,28 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
     this.channelName = channelName;
   }
 
-  public OpticalFiberConnection(ByteBuf buf) {
-    this(BlockPos.fromLong(buf.readLong()), EnumFacing.getFront(buf.readByte()), ByteBufUtils.readUTF8String(buf));
+
+  /* Bytes */
+
+  /**
+   * Serialize connection to bytes.
+   * @param buf the {@code ByteBuf} to write to.
+   */
+  public final void toBytes(ByteBuf buf) {
+    SerializeUtils.writeUTF8String(buf, TransferType.getKeyFromType(this.getTransferType()).toString());
+    SerializeUtils.writeUTF8String(buf, this.getTransferType().getKeyFromConnection(this.getClass()).toString());
+    buf.writeLong(this.pos.toLong());
+    buf.writeByte(this.side.getIndex());
+    SerializeUtils.writeUTF8String(buf, this.channelName);
+
+    this.writeConnectionSpecificBytes(buf);
   }
 
-  public OpticalFiberConnection(NBTTagCompound compound) {
-    this(readNBTPos(compound), EnumFacing.getFront(compound.getInteger("Side")), compound.getString("ChannelName"));
-  }
-
-  private static BlockPos readNBTPos(NBTTagCompound compound) {
-    NBTTagCompound posNBT = compound.getCompoundTag("Pos");
-    return new BlockPos(posNBT.getInteger("x"), posNBT.getInteger("y"), posNBT.getInteger("z"));
-  }
-
+  /**
+   * Read a connection from bytes.
+   * @param buf the {@code ByteBuf} to read from.
+   * @return the connection read.
+   */
   public static OpticalFiberConnection fromBytes(ByteBuf buf) {
     TransferType<?> type = TransferType.getTypeFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
     Class<? extends OpticalFiberConnection> connectionType = type.getConnectionFromKey(new ResourceLocation(SerializeUtils.readUTF8String(buf)));
@@ -60,6 +70,17 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
       throw new RuntimeException(e);
     }
   }
+
+  /**
+   * Reads and creates an OpticalFiberConnection from a {@link ByteBuf}.
+   * @param buf the buf to read from.
+   */
+  public OpticalFiberConnection(ByteBuf buf) {
+    this(BlockPos.fromLong(buf.readLong()), EnumFacing.getFront(buf.readByte()), ByteBufUtils.readUTF8String(buf));
+  }
+
+
+  /* NBT */
 
   public static class InvalidTypeKeyException extends Exception {
     public InvalidTypeKeyException(ResourceLocation key) {
@@ -77,11 +98,28 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
     }
   }
 
+  /**
+   * Helper function to read {@code pos} from a NBTTagCompound.
+   * @param compound the NBTTagCompound.
+   * @return the position read.
+   */
+  private static BlockPos readNBTPos(NBTTagCompound compound) {
+    NBTTagCompound posNBT = compound.getCompoundTag("_Pos");
+    return new BlockPos(posNBT.getInteger("x"), posNBT.getInteger("y"), posNBT.getInteger("z"));
+  }
+
+  /**
+   * Read a connection from a {@link NBTTagCompound}.
+   * @param compound the {@link NBTTagCompound} to read from.
+   * @return the connection read.
+   * @throws InvalidTypeKeyException thrown if the saved transfer type in the compound is invalid; occurs organically when reading a transfer type that was previously loaded but not now.
+   * @throws InvalidConnectionKeyException thrown if the saved connection type in the compound is invalid; occurs organically when reading a connection type that was previously loaded but not now.
+   */
   public static OpticalFiberConnection fromNBT(NBTTagCompound compound) throws InvalidTypeKeyException, InvalidConnectionKeyException {
     Class<? extends  OpticalFiberConnection> connectionClass;
     try {
-      TransferType<?> transferType = TransferType.getTypeFromKey(new ResourceLocation(compound.getString("TransferType")));
-      connectionClass = transferType.getConnectionFromKey(new ResourceLocation(compound.getString("ConnectionType")));
+      TransferType<?> transferType = TransferType.getTypeFromKey(new ResourceLocation(compound.getString("_TransferType")));
+      connectionClass = transferType.getConnectionFromKey(new ResourceLocation(compound.getString("_ConnectionType")));
     } catch (TransferType.NoTypeForKeyException e) {
       throw new InvalidTypeKeyException(e.key);
     } catch (TransferType.NoConnectionForKeyException e) {
@@ -98,94 +136,85 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
     }
   }
 
-  public static NBTTagCompound serializeNBT(OpticalFiberConnection connection) {
-    NBTTagCompound compound = new NBTTagCompound();
-    compound.setString("TransferType", TransferType.getKeyFromType(connection.getTransferType()).toString());
-    compound.setString("ConnectionType", connection.getTransferType().getKeyFromConnection(connection.getClass()).toString());
-    NBTTagCompound pos = new NBTTagCompound();
-    compound.setTag("Pos", pos);
-    pos.setInteger("x", connection.pos.getX());
-    pos.setInteger("y", connection.pos.getY());
-    pos.setInteger("z", connection.pos.getZ());
-    compound.setInteger("Side", connection.side.getIndex());
-    compound.setString("ChannelName", connection.channelName);
+  /**
+   * Creates a connection from a {@link NBTTagCompound}.
+   * @param compound the compound.
+   */
+  public OpticalFiberConnection(NBTTagCompound compound) {
+    this(readNBTPos(compound), EnumFacing.getFront(compound.getInteger("_Side")), compound.getString("_ChannelName"));
+  }
 
-    NBTTagCompound connectionSpecificNBT = connection.serializeConnectionSpecificNBT();
+  /**
+   * Serialize a connection to a {@link NBTTagCompound}.
+   * @return the serialized connection.
+   */
+  public final NBTTagCompound serializeNBT() {
+    NBTTagCompound compound = new NBTTagCompound();
+    compound.setString("_TransferType", TransferType.getKeyFromType(this.getTransferType()).toString());
+    compound.setString("_ConnectionType", this.getTransferType().getKeyFromConnection(this.getClass()).toString());
+    NBTTagCompound pos = new NBTTagCompound();
+    compound.setTag("_Pos", pos);
+    pos.setInteger("x", this.pos.getX());
+    pos.setInteger("y", this.pos.getY());
+    pos.setInteger("z", this.pos.getZ());
+    compound.setInteger("_Side", this.side.getIndex());
+    compound.setString("_ChannelName", this.channelName);
+
+    NBTTagCompound connectionSpecificNBT = this.serializeConnectionSpecificNBT();
     if (connectionSpecificNBT != null) {
-      compound.setTag("ConnectionSpecific", connectionSpecificNBT);
+      assert !connectionSpecificNBT.hasKey("_TransferType");
+      assert !connectionSpecificNBT.hasKey("_ConnectionType");
+      assert !connectionSpecificNBT.hasKey("_Pos");
+      assert !connectionSpecificNBT.hasKey("_Side");
+      assert !connectionSpecificNBT.hasKey("_ChannelName");
+      for (String key : connectionSpecificNBT.getKeySet()) {
+        compound.setTag(key, connectionSpecificNBT.getTag(key));
+      }
     }
 
     return compound;
   }
 
-  @Nullable
-  protected static NBTTagCompound getConnectionSpecificNBT(NBTTagCompound compound) {
-    if (!compound.hasKey("ConnectionSpecific", Constants.NBT.TAG_COMPOUND)) return null;
-    return compound.getCompoundTag("ConnectionSpecific");
-  }
 
-//  public enum TransferDirection {
-//    EXTRACT("extract"), // Extract from tile entity into network
-//    INSERT("insert"); // Insert into tile entity from network
-//    private final String unlocalizedName;
-//
-//    TransferDirection(String unlocalizedName) {
-//      this.unlocalizedName = unlocalizedName;
-//    }
-//
-//    public String getUnlocalizedName() {
-//      return this.unlocalizedName;
-//    }
-//
-//    public String getName() {
-//      return I18n.format("transfer_direction." + getUnlocalizedName() + ".name");
-//    }
-//  }
+  /* Useful Functions */
 
-  @Nullable
-  protected NBTTagCompound serializeConnectionSpecificNBT() {
-    return null;
-  }
-
-  @OverridingMethodsMustInvokeSuper
-  public void toBytes(ByteBuf buf) {
-    SerializeUtils.writeUTF8String(buf, TransferType.getKeyFromType(this.getTransferType()).toString());
-    SerializeUtils.writeUTF8String(buf, this.getTransferType().getKeyFromConnection(this.getClass()).toString());
-    buf.writeLong(this.pos.toLong());
-    buf.writeByte(this.side.getIndex());
-    SerializeUtils.writeUTF8String(buf, this.channelName);
-  }
-
+  /**
+   * Finds the tile which the connection is interfacing with.
+   * @param worldIn the world.
+   * @return Null if the connection is not connected to a tile and the tile it is connected to otherwise.
+   */
   @Nullable
   public TileEntity getConnectedTile(IBlockAccess worldIn) {
     BlockPos connectedTilePos = this.pos.offset(this.side);
     return worldIn.getTileEntity(connectedTilePos);
   }
 
-//  @Nullable
-//  protected Object getCapabilityHandler(IBlockAccess worldIn) {
-//    TileEntity connectedTile = worldIn.getTileEntity(pos.offset(this.side));
-//    if (connectedTile == null) {
-//      return null;
-//    }
-//    Capability<?> capability = this.transferType.getCapability();
-//    return connectedTile.getCapability(capability, this.side.getOpposite());
-//  }
 
+  /* Define Connection */
+
+  /**
+   * Returns the transfer type associated with the connection.
+   * @return the transfer type associated with the connection.
+   */
   public abstract TransferType getTransferType();
 
-//  public NBTTagCompound serializeNBT() {
-//    NBTTagCompound compound = new NBTTagCompound();
-//    compound.setInteger("x", this.pos.getX());
-//    compound.setInteger("y", this.pos.getY());
-//    compound.setInteger("z", this.pos.getZ());
-//    compound.setInteger("side", this.side.getIndex());
-//    compound.setString("channel", this.channelName);
-//    return compound;
-//  }
-//
+  /**
+   * Serializes the information specific to the type of connection to a {@link NBTTagCompound}.
+   * @return the serialized {@link NBTTagCompound} or null.
+   */
+  @Nullable
+  protected NBTTagCompound serializeConnectionSpecificNBT() {
+    return null;
+  }
+
+  /**
+   * Writes the connection specific information.
+   * @param buf the buf to write to.
+   */
+  protected void writeConnectionSpecificBytes(ByteBuf buf) { }
 
   @Override
+  @OverridingMethodsMustInvokeSuper
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof OpticalFiberConnection)) return false;
@@ -212,13 +241,4 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
   public int hashCode() {
     return Objects.hash(pos, side, channelName);
   }
-
-//  /**
-//   * Add the connection to the world.
-//   * @param world the world.
-//   * @return {@code true} iff the connection was successfully added.
-//   */
-//  public boolean initialize(IBlockAccess world) {
-//    return Util.getTileChecked(world, this.pos, TileOpticalFiberBase.class).addConnection(this);
-//  }
 }

@@ -140,8 +140,7 @@ public class TransferTypeItems extends TransferType<IItemHandler> {
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
-      super.toBytes(buf);
+    public void writeConnectionSpecificBytes(ByteBuf buf) {
       buf.writeInt(this.priority);
     }
 
