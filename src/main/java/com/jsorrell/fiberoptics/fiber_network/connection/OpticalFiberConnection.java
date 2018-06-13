@@ -40,7 +40,12 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
   }
 
   public OpticalFiberConnection(NBTTagCompound compound) {
-    this(new BlockPos(compound.getInteger("x"), compound.getInteger("y"), compound.getInteger("z")), EnumFacing.getFront(compound.getInteger("Side")), compound.getString("ChannelName"));
+    this(readNBTPos(compound), EnumFacing.getFront(compound.getInteger("Side")), compound.getString("ChannelName"));
+  }
+
+  private static BlockPos readNBTPos(NBTTagCompound compound) {
+    NBTTagCompound posNBT = compound.getCompoundTag("Pos");
+    return new BlockPos(posNBT.getInteger("x"), posNBT.getInteger("y"), posNBT.getInteger("z"));
   }
 
   public static OpticalFiberConnection fromBytes(ByteBuf buf) {
@@ -98,7 +103,7 @@ public abstract class OpticalFiberConnection implements Comparable<OpticalFiberC
     compound.setString("TransferType", TransferType.getKeyFromType(connection.getTransferType()).toString());
     compound.setString("ConnectionType", connection.getTransferType().getKeyFromConnection(connection.getClass()).toString());
     NBTTagCompound pos = new NBTTagCompound();
-    compound.setTag("ConnectionPos", pos);
+    compound.setTag("Pos", pos);
     pos.setInteger("x", connection.pos.getX());
     pos.setInteger("y", connection.pos.getY());
     pos.setInteger("z", connection.pos.getZ());
