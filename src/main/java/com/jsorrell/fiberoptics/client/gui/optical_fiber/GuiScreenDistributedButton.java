@@ -13,11 +13,11 @@ public abstract class GuiScreenDistributedButton extends GuiOpticalFiber {
 
   private static final Point2d[][] BUTTON_POSITIONS = {
           {new Point2d(1/2D, 1/2D)}, // 1
-          {new Point2d(1/3D, 1/2D), new Point2d(1D/3D, 1D/2D)}, //2
+          {new Point2d(1/3D, 1/2D), new Point2d(2D/3D, 1D/2D)}, //2
           {new Point2d(1/2D, 2/3D - Math.sqrt(3)/4), new Point2d(1/4D, 2/3D), new Point2d(3/4D, 2/3D)}, //3
           {new Point2d(1/2D, 2/3D - Math.sqrt(3)/4), new Point2d(1/4D, 2/3D), new Point2d(3/4D, 2/3D), new Point2d(1/2D, 1/2D)}, //4
           {new Point2d(1/4D, 1/4D), new Point2d(3/4D, 1/4D), new Point2d(1/2D, 1/2D), new Point2d(1/4D, 3/4D), new Point2d(3/4D, 3/4D)}, //5
-          //TODO expand this or find an algorithm. If the latter, put a limit on the options.
+          //TODO expand this or find an algorithm. If the former, put a limit on the options.
   };
 
   private static final int[] BUTTON_SIZES = { 96, 40, 32, 32, 28 };

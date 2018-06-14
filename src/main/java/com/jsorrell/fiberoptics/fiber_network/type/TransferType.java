@@ -7,7 +7,6 @@ import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionT
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -23,7 +22,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class TransferType<T> implements Comparable<TransferType> {
-  public static final Dimension RENDER_SIZE = new Dimension(16, 16);
+  public static final Dimension ICON_RENDER_SIZE = new Dimension(16, 16);
   private static final BiMap<ResourceLocation, TransferType> REGISTERED_TYPES = HashBiMap.create();
 
   private final BiMap<ResourceLocation, OpticalFiberConnectionType> registeredConnections = HashBiMap.create();
@@ -151,16 +150,11 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
   }
 
   @SideOnly(Side.CLIENT)
-  public final void drawTypeIcon(Minecraft mc, int x, int y, float zLevel, float partialTicks) {
-    drawTypeIcon(mc, x, y, zLevel, RENDER_SIZE, partialTicks);
-  }
-
-  @SideOnly(Side.CLIENT)
-  public final void drawTypeIcon(Minecraft mc, int x, int y, float zLevel, Dimension size, float partialTicks) {
+  public final void drawTransferTypeIcon(Minecraft mc, int x, int y, float zLevel, Dimension size, float partialTicks) {
     GlStateManager.pushMatrix();
     GlStateManager.translate(x, y, 0);
-    GlStateManager.scale((double)size.getWidth() / (double)RENDER_SIZE.getWidth(), (double)size.getHeight() / (double)RENDER_SIZE.getHeight(), 1);
-    drawTypeIcon(mc, zLevel, partialTicks);
+    GlStateManager.scale((double)size.getWidth() / (double) ICON_RENDER_SIZE.getWidth(), (double)size.getHeight() / (double) ICON_RENDER_SIZE.getHeight(), 1);
+    drawTransferTypeIcon(mc, zLevel, partialTicks);
     GlStateManager.popMatrix();
   }
 
@@ -180,5 +174,5 @@ public abstract class TransferType<T> implements Comparable<TransferType> {
    * Render a 16x16 icon at (0,0).
    */
   @SideOnly(Side.CLIENT)
-  public abstract void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks);
+  public abstract void drawTransferTypeIcon(Minecraft mc, float zLevel, float partialTicks);
 }

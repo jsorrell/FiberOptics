@@ -3,10 +3,12 @@ package com.jsorrell.fiberoptics.fiber_network.type;
 import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionType;
+import com.jsorrell.fiberoptics.util.SizedTexturePart;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.model.TextureOffset;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -20,6 +22,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,7 +85,7 @@ public class TransferTypeItems extends TransferType<IItemHandler> implements Ser
 
   @Override
   @SideOnly(Side.CLIENT)
-  public void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+  public void drawTransferTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
     RenderItem renderItem = mc.getRenderItem();
     renderItem.zLevel = zLevel;
     renderItem.renderItemIntoGUI(new ItemStack(ICON_ITEM), 0, 0);
@@ -109,7 +112,7 @@ public class TransferTypeItems extends TransferType<IItemHandler> implements Ser
 
     @Override
     public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
-
+      (new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/type_icons.png"), new TextureOffset(16, 0), new Dimension(16, 16))).drawTexturePart(mc, 0, 0, zLevel);
     }
 
     @Override
@@ -163,6 +166,7 @@ public class TransferTypeItems extends TransferType<IItemHandler> implements Ser
 
     @Override
     public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+      (new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/type_icons.png"), new TextureOffset(32, 0), new Dimension(16, 16))).drawTexturePart(mc, 0, 0, zLevel);
 
     }
 

@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
-  private static final SizedTexturePart ICON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/widgets.png"), new TextureOffset(0, 43), new Dimension(16, 16));
+  private static final SizedTexturePart ICON_TEXTURE = new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/type_icons.png"), new TextureOffset(0, 32), new Dimension(16, 16));
 
   public TransferTypeEnergy(ResourceLocation registryKey) {
     super(registryKey);
@@ -87,7 +87,7 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
 
   @Override
   @SideOnly(Side.CLIENT)
-  public void drawTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+  public void drawTransferTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
     ICON_TEXTURE.drawTexturePart(mc, 0, 0, zLevel);
   }
 
@@ -106,6 +106,7 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
 
     @Override
     public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
+      (new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/type_icons.png"), new TextureOffset(16, 32), new Dimension(16, 16))).drawTexturePart(mc, 0, 0, zLevel);
     }
 
     @Nullable
@@ -160,7 +161,7 @@ public class TransferTypeEnergy extends TransferType<IEnergyStorage> {
 
     @Override
     public void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks) {
-
+      (new SizedTexturePart(new ResourceLocation(FiberOptics.MODID, "textures/gui/type_icons.png"), new TextureOffset(32, 32), new Dimension(16, 16))).drawTexturePart(mc, 0, 0, zLevel);
     }
 
     @Nullable

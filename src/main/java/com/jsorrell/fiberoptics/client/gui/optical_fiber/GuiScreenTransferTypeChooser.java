@@ -66,7 +66,7 @@ public class GuiScreenTransferTypeChooser extends GuiScreenDistributedButton {
         GlStateManager.disableDepth();
         GlStateManager.disableLighting();
         // Icon
-        this.type.drawTypeIcon(mc, x, y, this.zLevel, new Dimension(this.width, this.height), partialTicks);
+        this.type.drawTransferTypeIcon(mc, x, y, this.zLevel, new Dimension(this.width, this.height), partialTicks);
       }
     }
   }

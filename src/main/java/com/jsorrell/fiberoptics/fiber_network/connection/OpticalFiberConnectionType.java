@@ -5,13 +5,14 @@ import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.util.Dimension;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,6 +23,7 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class OpticalFiberConnectionType implements Comparable<OpticalFiberConnectionType> {
+  public static final Dimension ICON_RENDER_SIZE = new Dimension(16, 16);
   private final ResourceLocation registryKey;
   private final TransferType transferType;
 
@@ -87,6 +89,16 @@ public abstract class OpticalFiberConnectionType implements Comparable<OpticalFi
     return null;
   }
 
+  @SideOnly(Side.CLIENT)
+  public final void drawConnectionTypeIcon(Minecraft mc, int x, int y, float zLevel, Dimension size, float partialTicks) {
+    GlStateManager.pushMatrix();
+    GlStateManager.translate(x, y, 0);
+    GlStateManager.scale((double)size.getWidth() / (double) ICON_RENDER_SIZE.getWidth(), (double)size.getHeight() / (double) ICON_RENDER_SIZE.getHeight(), 1);
+    drawConnectionTypeIcon(mc, zLevel, partialTicks);
+    GlStateManager.popMatrix();
+  }
+
+  @SideOnly(Side.CLIENT)
   public abstract void drawConnectionTypeIcon(Minecraft mc, float zLevel, float partialTicks);
 
   @Override

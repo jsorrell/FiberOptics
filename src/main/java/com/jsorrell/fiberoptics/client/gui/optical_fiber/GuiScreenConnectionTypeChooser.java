@@ -33,7 +33,6 @@ public class GuiScreenConnectionTypeChooser extends GuiScreenDistributedButton {
 
   public GuiScreenConnectionTypeChooser(BlockPos pos, EnumFacing side, String channel, TransferType transferType, Collection<? extends  OpticalFiberConnectionType> connectionTypes) {
     super(connectionTypes.size());
-    System.out.println(connectionTypes);
     this.pos = pos;
     this.side = side;
     this.channel = channel;
@@ -79,7 +78,7 @@ public class GuiScreenConnectionTypeChooser extends GuiScreenDistributedButton {
         GlStateManager.disableLighting();
 
         // Icon
-        this.connectionType.drawConnectionTypeIcon(mc, this.zLevel, partialTicks);
+        this.connectionType.drawConnectionTypeIcon(mc, this.x, this.y, this.zLevel, new Dimension(this.width, this.height), partialTicks);
       }
     }
   }

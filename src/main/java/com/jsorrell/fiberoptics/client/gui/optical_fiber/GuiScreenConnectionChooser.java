@@ -5,14 +5,11 @@ import com.jsorrell.fiberoptics.FiberOptics;
 import com.jsorrell.fiberoptics.client.gui.components.IGuiListElement;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnection;
 import com.jsorrell.fiberoptics.fiber_network.connection.OpticalFiberConnectionType;
-import com.jsorrell.fiberoptics.fiber_network.type.TransferType;
-import com.jsorrell.fiberoptics.fiber_network.type.TransferTypeItems;
 import com.jsorrell.fiberoptics.message.FiberOpticsPacketHandler;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketCreateConnection;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketOpenChannelChooser;
 import com.jsorrell.fiberoptics.message.optical_fiber.PacketRemoveConnection;
 import com.jsorrell.fiberoptics.util.SizedTexturePart;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -30,8 +27,6 @@ import org.lwjgl.util.Rectangle;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,11 +42,13 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
   private static final Rectangle SCROLLER_BOX = new Rectangle(181, 23, 12, 161);
   private static final Rectangle LIST_ELEMENT_BOX = new Rectangle(13, 23, 157, 161);
 
-  protected BlockPos pos;
+  protected final BlockPos pos;
 
   public GuiScreenConnectionChooser (BlockPos pos, Collection<EnumFacing> sidesToDisplay, Collection<OpticalFiberConnection> connections) {
     super(SCROLLER_BOX, LIST_ELEMENT_BOX, ELEMENT_BACKGROUND.size.getHeight(), generateListElements(sidesToDisplay, connections));
-    connections.forEach(c -> System.out.println(c.pos ));
+    for (OpticalFiberConnection c : connections) {
+      assert c.pos.equals(pos);
+    }
     this.pos = pos;
   }
 
@@ -131,12 +128,9 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
 
   /* Connection List Element */
   private static class GuiConnectionListElement extends Gui implements IGuiListElement {
-    protected static final Dimension TYPE_ICON_SIZE = new Dimension(16, 16);
-    protected static final int TYPE_ICON_X = 2;
-    protected static final int TYPE_ICON_Y = 3;
-
-    protected static final int DIRECTION_ICON_X = 20;
-    protected static final int DIRECTION_ICON_Y = 3;
+    protected static final Dimension CONNECTION_TYPE_ICON_SIZE = new Dimension(16, 16);
+    protected static final int CONNECTION_TYPE_ICON_X = 2;
+    protected static final int CONNECTION_TYPE_ICON_Y = 3;
 
     protected static final int CHANNEL_NAME_X = 39;
     protected static final int MAX_CHANNEL_NAME_WIDTH = 77;
@@ -179,13 +173,8 @@ public class GuiScreenConnectionChooser extends GuiOpticalFiberListWithScroller 
 
       /* Type Icon */
       GlStateManager.clear(256);
-      this.connection.getTransferType().drawTypeIcon(mc, x + TYPE_ICON_X, y + TYPE_ICON_Y, this.zLevel, TYPE_ICON_SIZE, partialTicks);
+      this.connection.getConnectionType().drawConnectionTypeIcon(mc, x + CONNECTION_TYPE_ICON_X, y + CONNECTION_TYPE_ICON_Y, this.zLevel, CONNECTION_TYPE_ICON_SIZE, partialTicks);
       GlStateManager.clear(256);
-
-      /* Direction Icon */
-      //FIXME
-//      INSERT_ICON.drawTexturePart(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
-//      this.connection.drawConnectionIcon(mc, x + DIRECTION_ICON_X, y + DIRECTION_ICON_Y, this.zLevel);
 
       /* Channel Name */
       String channelNameToRender = this.connection.channelName.isEmpty() ? "[unnamed]" : this.connection.channelName;
